@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Für Pebbli 💙</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    @media print {
+      body { background: #0d1117 !important; }
+      .card { box-shadow: none !important; page-break-inside: avoid; }
+      .hint { display: none; }
+    }
+
+    body {
+      min-height: 100vh;
+      background: #060a10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .hint {
+      color: #444d56;
+      font-size: 11px;
+      margin-bottom: 24px;
+      letter-spacing: 0.08em;
+    }
+
+    .card {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 640px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px #161b22,
+        0 20px 60px rgba(0,0,0,0.6),
+        0 0 80px rgba(88, 166, 255, 0.04);
+      animation: fadeIn 1s ease both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Editor chrome */
+    .editor-bar {
+      background: #161b22;
+      border-bottom: 1px solid #21262d;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .dots { display: flex; gap: 6px; }
+    .dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+    }
+    .dot-red   { background: #ff5f57; }
+    .dot-yellow{ background: #febc2e; }
+    .dot-green { background: #28c840; }
+
+    .filename {
+      color: #8b949e;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      margin-left: 4px;
+    }
+
+    /* Line numbers + code area */
+    .code-area {
+      display: flex;
+      padding: 24px 0;
+    }
+
+    .line-numbers {
+      padding: 0 16px;
+      text-align: right;
+      user-select: none;
+      color: #30363d;
+      font-size: 13px;
+      line-height: 1.9;
+      min-width: 52px;
+      border-right: 1px solid #21262d;
+    }
+
+    .code-body {
+      padding: 0 24px;
+      font-size: 13px;
+      line-height: 1.9;
+      overflow-x: auto;
+      flex: 1;
+    }
+
+    /* Syntax colors — GitHub Dark style */
+    .kw   { color: #ff7b72; }   /* keywords: const, function, while */
+    .fn   { color: #d2a8ff; }   /* function names */
+    .str  { color: #a5d6ff; }   /* strings */
+    .num  { color: #79c0ff; }   /* numbers */
+    .cmt  { color: #6a737d; font-style: italic; } /* comments */
+    .prop { color: #79c0ff; }   /* object properties */
+    .punc { color: #c9d1d9; }   /* punctuation */
+    .var  { color: #ffa657; }   /* variables */
+    .bool { color: #ff7b72; }   /* true/false */
+    .plain{ color: #c9d1d9; }   /* plain text */
+    .arr  { color: #e3b341; }   /* arrow => */
+
+    .code-line {
+      display: block;
+      white-space: pre;
+    }
+    .code-line.empty { height: 1.9em; }
+
+    /* Footer quote */
+    .card-footer {
+      border-top: 1px solid #21262d;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0d1117;
+    }
+
+    .quote {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      color: #58a6ff;
+      font-size: 14px;
+      opacity: 0.85;
+    }
+
+    .heart {
+      font-size: 18px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1);   opacity: 1;    }
+      50%       { transform: scale(1.2); opacity: 0.75; }
+    }
+  </style>
+</head>
+<body>
+
+  <p class="hint">Tipp: Strg+P (oder Cmd+P) zum Drucken / Als PDF speichern</p>
+
+  <div class="card">
+
+    <!-- Editor chrome -->
+    <div class="editor-bar">
+      <div class="dots">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+      </div>
+      <span class="filename">fuer-pebbli.c</span>
+    </div>
+
+    <!-- Code -->
+    <div class="code-area">
+
+      <div class="line-numbers">
+        1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>
+        11<br>12<br>13<br>14<br>15<br>16<br>17<br>18<br>19<br>20<br>
+        21<br>22<br>23<br>24<br>25<br>26<br>27<br>28<br>29<br>30<br>
+        31<br>32<br>33<br>34<br>35<br>36<br>37<br>38<br>39<br>40<br>41
+      </div>
+
+      <div class="code-body">
+
+<span class="code-line"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span></span>
+<span class="code-line"><span class="kw">#include</span> <span class="str">&lt;stdbool.h&gt;</span></span>
+<span class="code-line empty"></span>
+<span class="code-line"><span class="kw">typedef struct</span> <span class="plain">{</span></span>
+<span class="code-line">  <span class="kw">char</span> <span class="plain">*</span><span class="var">name</span><span class="plain">;</span></span>
+<span class="code-line">  <span class="kw">char</span> <span class="plain">*</span><span class="var">status</span><span class="plain">;</span></span>
+<span class="code-line">  <span class="kw">char</span> <span class="plain">*</span><span class="var">koerperlich</span><span class="plain">[</span><span class="num">2</span><span class="plain">];</span>  <span class="cmt">// Kraulen, Küssen</span></span>
+<span class="code-line">  <span class="kw">char</span> <span class="plain">*</span><span class="var">persoenlich</span><span class="plain">[</span><span class="num">1</span><span class="plain">];</span>  <span class="cmt">// Zusammen sein</span></span>
+<span class="code-line">  <span class="kw">bool</span>  <span class="var">fernModus</span><span class="plain">;</span></span>
+<span class="code-line">  <span class="kw">bool</span>  <span class="var">istWach</span><span class="plain">;</span></span>
+<span class="code-line"><span class="plain">} </span><span class="fn">Pebbli</span><span class="plain">;</span></span>
+<span class="code-line empty"></span>
+<span class="code-line"><span class="kw">void</span> <span class="fn">sende_in_gedanken</span><span class="plain">(</span><span class="kw">char</span> <span class="plain">*</span><span class="var">aktion</span><span class="plain">) {</span></span>
+<span class="code-line">  <span class="fn">printf</span><span class="plain">(</span><span class="str">"%s – via Gedanken\n"</span><span class="plain">,</span> <span class="var">aktion</span><span class="plain">);</span></span>
+<span class="code-line"><span class="plain">}</span></span>
+<span class="code-line empty"></span>
+<span class="code-line"><span class="kw">void</span> <span class="fn">fluestere</span><span class="plain">(</span><span class="kw">char</span> <span class="plain">*</span><span class="var">nachricht</span><span class="plain">) {</span></span>
+<span class="code-line">  <span class="fn">printf</span><span class="plain">(</span><span class="str">"%s\n"</span><span class="plain">,</span> <span class="var">nachricht</span><span class="plain">);</span></span>
+<span class="code-line"><span class="plain">}</span></span>
+<span class="code-line empty"></span>
+<span class="code-line"><span class="kw">void</span> <span class="fn">gute_nacht</span><span class="plain">(</span><span class="fn">Pebbli</span> <span class="plain">*</span><span class="var">p</span><span class="plain">) {</span></span>
+<span class="code-line">  <span class="kw">while</span> <span class="plain">(</span><span class="var">p</span><span class="plain">-&gt;</span><span class="var">fernModus</span> <span class="plain">== </span><span class="bool">true</span><span class="plain">) {</span></span>
+<span class="code-line">    <span class="fn">sende_in_gedanken</span><span class="plain">(</span><span class="var">p</span><span class="plain">-&gt;</span><span class="var">koerperlich</span><span class="plain">[</span><span class="num">0</span><span class="plain">]);</span>  <span class="cmt">// beste Funktion ever</span></span>
+<span class="code-line">    <span class="fn">sende_in_gedanken</span><span class="plain">(</span><span class="var">p</span><span class="plain">-&gt;</span><span class="var">koerperlich</span><span class="plain">[</span><span class="num">1</span><span class="plain">]);</span>  <span class="cmt">// auch unverzichtbar</span></span>
+<span class="code-line">    <span class="kw">if</span> <span class="plain">(</span><span class="var">p</span><span class="plain">-&gt;</span><span class="var">istWach</span> <span class="plain">== </span><span class="bool">false</span><span class="plain">) </span><span class="kw">break</span><span class="plain">;</span></span>
+<span class="code-line">  <span class="plain">}</span></span>
+<span class="code-line">  <span class="fn">fluestere</span><span class="plain">(</span><span class="str">"Schlaf gut"</span><span class="plain">);</span></span>
+<span class="code-line"><span class="plain">}</span></span>
+<span class="code-line empty"></span>
+<span class="code-line"><span class="kw">int</span> <span class="fn">main</span><span class="plain">() {</span></span>
+<span class="code-line">  <span class="fn">Pebbli</span> <span class="var">pebbli</span> <span class="plain">= {</span></span>
+<span class="code-line">    <span class="str">"Mein Seelenverwandter"</span><span class="plain">,</span></span>
+<span class="code-line">    <span class="str">"unverzichtbar"</span><span class="plain">,</span></span>
+<span class="code-line">    <span class="plain">{</span><span class="str">"Kraulen"</span><span class="plain">,</span> <span class="str">"Küssen"</span><span class="plain">},</span></span>
+<span class="code-line">    <span class="plain">{</span><span class="str">"Zusammen sein"</span><span class="plain">},</span></span>
+<span class="code-line">    <span class="bool">true</span><span class="plain">,</span>  <span class="cmt">// fernModus – temporäre Lösung bis auf Wiedersehen</span></span>
+<span class="code-line">    <span class="bool">true</span>   <span class="cmt">// istWach</span></span>
+<span class="code-line">  <span class="plain">};</span></span>
+<span class="code-line empty"></span>
+<span class="code-line">  <span class="fn">printf</span><span class="plain">(</span><span class="str">"Distanz: egal.\n"</span><span class="plain">);</span></span>
+<span class="code-line">  <span class="fn">printf</span><span class="plain">(</span><span class="str">"Pebbli fehlt: immer.\n"</span><span class="plain">);</span></span>
+<span class="code-line">  <span class="fn">gute_nacht</span><span class="plain">(&amp;</span><span class="var">pebbli</span><span class="plain">);</span></span>
+<span class="code-line">  <span class="fn">printf</span><span class="plain">(</span><span class="str">"Wiedersehen: kommt bald.\n"</span><span class="plain">);</span></span>
+<span class="code-line">  <span class="kw">return</span> <span class="num">0</span><span class="plain">;</span></span>
+<span class="code-line"><span class="plain">}</span></span>
+
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="card-footer">
+      <span class="quote">für dich, meinen Seelenverwandten</span>
+      <span class="heart">💙</span>
+    </div>
+
+  </div>
+
+</body>
+</html>
