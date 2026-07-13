@@ -212,7 +212,7 @@
   <div class="screen visible" id="startScreen">
     <div class="card">
       <span class="label">// wurfspiel</span>
-      <h1>Wirf dem Otter etwas zu! 🦦</h1>
+      <h1>Wirf dem Otter etwas zu und füttere ihn! 🦦</h1>
       <p>Finger auf den Gegenstand legen, in Richtung Otter ziehen und loslassen!<br><br>
       🐟 Fisch = 10 Punkte &nbsp;|&nbsp; 💙 Herz = 20 Punkte</p>
       <div class="highscore-display">Highscore: <span id="startHighscore">0</span> Punkte</div>
@@ -224,7 +224,7 @@
   <div id="gameScreen">
     <div class="game-header">
       <div class="game-stat">🎯 <span id="scoreDisplay">0</span></div>
-      <div class="game-stat" style="font-size:13px; color:var(--soft); font-style:italic;">Wirf dem Otter zu!</div>
+      <div class="game-stat" style="font-size:13px; color:var(--soft); font-style:italic;">Fütter den Otter! </div>
       <div class="game-stat">⏱ <span id="timerDisplay">30</span>s</div>
     </div>
     <div class="timer-bar-wrap">
@@ -347,7 +347,7 @@
       const dy = endY - dragStartY;
       const dist = Math.hypot(dx, dy);
       if (dist < 15) return;
-     const speed = Math.min(dist * 0.03, 1.5);
+     const speed = Math.min(dist * 0.022, 1.1);
       const vx = (dx / dist) * speed * 14;
       const vy = (dy / dist) * speed * 14;
       const origin = getThrowOrigin();
