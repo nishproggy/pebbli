@@ -102,7 +102,7 @@
       inset: 0;
       display: none;
       flex-direction: column;
-      background: #e8f4f8;
+      background: linear-gradient(180deg, #c8e6f0 0%, #e8f4f8 60%, #8bc34a 60%, #7cb342 100%);
     }
     #gameScreen.visible { display: flex; }
 
@@ -127,68 +127,40 @@
     .timer-bar-wrap { height: 6px; background: #f0e0e5; flex-shrink: 0; }
     .timer-bar { height: 100%; background: var(--accent); transition: width 1s linear; }
 
-    /* Canvas area */
     #gameCanvas {
       flex: 1;
       position: relative;
       overflow: hidden;
     }
 
-    /* Sky background */
-    #gameCanvas::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, #c8e6f0 0%, #e8f4f8 60%, #8bc34a 60%, #7cb342 100%);
-    }
-
-    /* Otter target */
+    /* Otter */
     #otterTarget {
       position: absolute;
-      right: 60px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 64px;
+      font-size: 56px;
       z-index: 5;
-      transition: all 0.2s ease;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: default;
     }
 
-    /* Throw zone */
-    #throwZone {
+    /* Throw item - fixed bottom center */
+    #throwItem {
       position: absolute;
-      left: 40px;
-      bottom: 30%;
-      font-size: 48px;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 44px;
       z-index: 5;
-      cursor: crosshair;
+      cursor: grab;
+      transition: transform 0.1s ease;
     }
 
-    /* Aim line */
-    #aimCanvas {
-      position: absolute;
-      inset: 0;
-      z-index: 3;
-      pointer-events: none;
-    }
+    #throwItem:active { cursor: grabbing; transform: translateX(-50%) scale(1.2); }
 
     /* Projectile */
     .projectile {
       position: absolute;
-      font-size: 32px;
-      z-index: 6;
-      pointer-events: none;
-    }
-
-    /* Reaction */
-    #reaction {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
       font-size: 40px;
-      z-index: 10;
-      opacity: 0;
-      transition: opacity 0.2s ease;
+      z-index: 6;
       pointer-events: none;
     }
 
@@ -196,40 +168,41 @@
     .score-popup {
       position: absolute;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 600;
       color: var(--accent);
       pointer-events: none;
       z-index: 20;
-      animation: popUp 1s ease forwards;
+      animation: popUp 0.9s ease forwards;
     }
 
     @keyframes popUp {
-      0%   { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(-60px); opacity: 0; }
+      0%   { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(-70px) scale(1.3); opacity: 0; }
     }
 
-    /* Drag arrow */
-    #dragGuide {
+    /* Reaction bubble */
+    #reaction {
       position: absolute;
-      left: 40px;
-      bottom: calc(30% + 60px);
+      font-size: 36px;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    /* Hint */
+    #hint {
+      position: absolute;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
       color: var(--soft);
       z-index: 5;
-      text-align: center;
-      width: 80px;
-    }
-
-    /* Next item indicator */
-    #nextItem {
-      position: absolute;
-      left: 110px;
-      bottom: calc(30% + 10px);
-      font-size: 24px;
-      z-index: 5;
-      opacity: 0.5;
+      white-space: nowrap;
+      opacity: 0.7;
     }
   </style>
 </head>
@@ -240,7 +213,7 @@
     <div class="card">
       <span class="label">// wurfspiel</span>
       <h1>Wirf dem Otter etwas zu! 🦦</h1>
-      <p>Klicke auf den Gegenstand, ziehe zurück und lass los!<br>
+      <p>Finger auf den Gegenstand legen, in Richtung Otter ziehen und loslassen!<br><br>
       🐟 Fisch = 10 Punkte &nbsp;|&nbsp; 💙 Herz = 20 Punkte</p>
       <div class="highscore-display">Highscore: <span id="startHighscore">0</span> Punkte</div>
       <button class="btn" onclick="startGame()">Los geht's! 🎯</button>
@@ -258,12 +231,10 @@
       <div class="timer-bar" id="timerBar" style="width:100%"></div>
     </div>
     <div id="gameCanvas">
-      <canvas id="aimCanvas"></canvas>
       <div id="otterTarget">🦦</div>
-      <div id="throwZone">🐟</div>
-      <div id="nextItem"></div>
-      <div id="dragGuide">← zieh & lass los</div>
+      <div id="throwItem">🐟</div>
       <div id="reaction"></div>
+      <div id="hint">zieh in Richtung Otter & lass los</div>
     </div>
   </div>
 
@@ -285,45 +256,58 @@
     let highscore = 0;
     let timeLeft = 30;
     let timerInterval = null;
-    let isDragging = false;
-    let startX, startY, currentX, currentY;
-    let currentItem = '🐟';
-    let nextItem = '💙';
     let isFlying = false;
+    let isDragging = false;
+    let dragStartX, dragStartY;
+    let currentItem = '🐟';
+    let hintShown = false;
 
     const canvas = document.getElementById('gameCanvas');
-    const aimCanvas = document.getElementById('aimCanvas');
-    const ctx = aimCanvas.getContext('2d');
-    const throwZone = document.getElementById('throwZone');
     const otterEl = document.getElementById('otterTarget');
+    const throwItem = document.getElementById('throwItem');
     const reactionEl = document.getElementById('reaction');
-    const nextItemEl = document.getElementById('nextItem');
+    const hintEl = document.getElementById('hint');
 
-    function resizeCanvas() {
-      aimCanvas.width = canvas.offsetWidth;
-      aimCanvas.height = canvas.offsetHeight;
+    function placeOtter() {
+      const cw = canvas.offsetWidth;
+      const ch = canvas.offsetHeight;
+      const margin = 80;
+      const x = margin + Math.random() * (cw - margin * 2);
+      const y = margin + Math.random() * (ch * 0.55);
+      otterEl.style.left = (x - 28) + 'px';
+      otterEl.style.top = (y - 28) + 'px';
+    }
+
+    function getThrowOrigin() {
+      const rect = throwItem.getBoundingClientRect();
+      const canvasRect = canvas.getBoundingClientRect();
+      return {
+        x: rect.left + rect.width / 2 - canvasRect.left,
+        y: rect.top + rect.height / 2 - canvasRect.top
+      };
     }
 
     function startGame() {
       score = 0;
       timeLeft = 30;
       isFlying = false;
-      currentItem = Math.random() < 0.5 ? '🐟' : '💙';
-      nextItem = Math.random() < 0.5 ? '🐟' : '💙';
+      hintShown = false;
+      currentItem = '🐟';
 
       document.getElementById('scoreDisplay').textContent = '0';
       document.getElementById('timerDisplay').textContent = '30';
       document.getElementById('timerBar').style.width = '100%';
-      throwZone.textContent = currentItem;
-      nextItemEl.textContent = nextItem;
+      throwItem.textContent = currentItem;
+      throwItem.style.opacity = '1';
       otterEl.textContent = '🦦';
       reactionEl.style.opacity = '0';
+      hintEl.style.opacity = '0.7';
 
       document.getElementById('startScreen').classList.remove('visible');
       document.getElementById('endScreen').classList.remove('visible');
       document.getElementById('gameScreen').classList.add('visible');
 
-      resizeCanvas();
+      setTimeout(() => placeOtter(), 100);
 
       timerInterval = setInterval(() => {
         timeLeft--;
@@ -336,103 +320,68 @@
     }
 
     function setupControls() {
-      throwZone.addEventListener('mousedown', startDrag);
-      throwZone.addEventListener('touchstart', startDragTouch, { passive: true });
-      window.addEventListener('mousemove', onDrag);
-      window.addEventListener('touchmove', onDragTouch, { passive: true });
-      window.addEventListener('mouseup', release);
-      window.addEventListener('touchend', release);
+      throwItem.addEventListener('touchstart', onTouchStart, { passive: true });
+      window.addEventListener('touchmove', onTouchMove, { passive: true });
+      window.addEventListener('touchend', onTouchEnd);
+      throwItem.addEventListener('mousedown', onMouseDown);
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
     }
 
-    function startDrag(e) {
+    function onTouchStart(e) {
       if (isFlying) return;
       isDragging = true;
-      const rect = throwZone.getBoundingClientRect();
-      startX = rect.left + rect.width / 2;
-      startY = rect.top + rect.height / 2;
-      currentX = e.clientX;
-      currentY = e.clientY;
+      dragStartX = e.touches[0].clientX;
+      dragStartY = e.touches[0].clientY;
+      if (!hintShown) { hintEl.style.opacity = '0'; hintShown = true; }
     }
 
-    function startDragTouch(e) {
-      if (isFlying) return;
-      isDragging = true;
-      const rect = throwZone.getBoundingClientRect();
-      startX = rect.left + rect.width / 2;
-      startY = rect.top + rect.height / 2;
-      currentX = e.touches[0].clientX;
-      currentY = e.touches[0].clientY;
-    }
+    function onTouchMove(e) { /* just track */ }
 
-    function onDrag(e) {
-      if (!isDragging) return;
-      currentX = e.clientX;
-      currentY = e.clientY;
-      drawAim();
-    }
-
-    function onDragTouch(e) {
-      if (!isDragging) return;
-      currentX = e.touches[0].clientX;
-      currentY = e.touches[0].clientY;
-      drawAim();
-    }
-
-    function drawAim() {
-      ctx.clearRect(0, 0, aimCanvas.width, aimCanvas.height);
-      const canvasRect = canvas.getBoundingClientRect();
-      const sx = startX - canvasRect.left;
-      const sy = startY - canvasRect.top;
-      const dx = currentX - canvasRect.left;
-      const dy = currentY - canvasRect.top;
-
-      // Velocity (inverted)
-      const vx = (sx - dx) * 0.08;
-      const vy = (sy - dy) * 0.08;
-
-      // Draw dotted arc
-      ctx.setLineDash([6, 8]);
-      ctx.strokeStyle = 'rgba(224, 92, 122, 0.5)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-
-      let px = sx, py = sy;
-      let pvx = vx, pvy = vy;
-      ctx.moveTo(px, py);
-
-      for (let i = 0; i < 20; i++) {
-        px += pvx * 4;
-        py += pvy * 4;
-        pvy += 0.4; // gravity
-        ctx.lineTo(px, py);
-      }
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-
-    function release() {
+    function onTouchEnd(e) {
       if (!isDragging) return;
       isDragging = false;
-      ctx.clearRect(0, 0, aimCanvas.width, aimCanvas.height);
+      const endX = e.changedTouches[0].clientX;
+      const endY = e.changedTouches[0].clientY;
+      const dx = endX - dragStartX;
+      const dy = endY - dragStartY;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 15) return;
+      const speed = Math.min(dist * 0.018, 0.9);
+      const vx = (dx / dist) * speed * 14;
+      const vy = (dy / dist) * speed * 14;
+      const origin = getThrowOrigin();
+      throwProjectile(origin.x, origin.y, vx, vy);
+    }
 
-      const canvasRect = canvas.getBoundingClientRect();
-      const sx = startX - canvasRect.left;
-      const sy = startY - canvasRect.top;
-      const dx = currentX - canvasRect.left;
-      const dy = currentY - canvasRect.top;
+    function onMouseDown(e) {
+      if (isFlying) return;
+      isDragging = true;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      if (!hintShown) { hintEl.style.opacity = '0'; hintShown = true; }
+    }
 
-      const dist = Math.hypot(dx - sx, dy - sy);
-      if (dist < 10) return; // too short
+    function onMouseMove(e) { /* just track */ }
 
-      const vx = (sx - dx) * 0.08;
-      const vy = (sy - dy) * 0.08;
-
-      throwProjectile(sx, sy, vx, vy);
+    function onMouseUp(e) {
+      if (!isDragging) return;
+      isDragging = false;
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 10) return;
+      const speed = Math.min(dist * 0.018, 0.9);
+      const vx = (dx / dist) * speed * 14;
+      const vy = (dy / dist) * speed * 14;
+      const origin = getThrowOrigin();
+      throwProjectile(origin.x, origin.y, vx, vy);
     }
 
     function throwProjectile(sx, sy, vx, vy) {
       if (isFlying || timeLeft <= 0) return;
       isFlying = true;
+      throwItem.style.opacity = '0.3';
 
       const proj = document.createElement('div');
       proj.className = 'projectile';
@@ -440,36 +389,35 @@
       proj.style.left = sx + 'px';
       proj.style.top = sy + 'px';
       canvas.appendChild(proj);
-      throwZone.style.opacity = '0.3';
 
       let px = sx, py = sy;
       let pvx = vx, pvy = vy;
-      const gravity = 0.35;
+      const gravity = 0.25;
 
       const otterRect = otterEl.getBoundingClientRect();
       const canvasRect = canvas.getBoundingClientRect();
-      const otterX = otterRect.left - canvasRect.left + otterRect.width / 2;
-      const otterY = otterRect.top - canvasRect.top + otterRect.height / 2;
+      const otterCX = otterRect.left - canvasRect.left + otterRect.width / 2;
+      const otterCY = otterRect.top - canvasRect.top + otterRect.height / 2;
 
       const anim = setInterval(() => {
-        px += pvx * 3;
-        py += pvy * 3;
+        px += pvx;
+        py += pvy;
         pvy += gravity;
 
-        proj.style.left = px + 'px';
-        proj.style.top = py + 'px';
+        proj.style.left = (px - 20) + 'px';
+        proj.style.top = (py - 20) + 'px';
 
         // Hit check
-        const dist = Math.hypot(px - otterX, py - otterY);
-        if (dist < 50) {
+        const dist = Math.hypot(px - otterCX, py - otterCY);
+        if (dist < 52) {
           clearInterval(anim);
           proj.remove();
-          onHit();
+          onHit(px, py);
           return;
         }
 
         // Out of bounds
-        if (px > canvas.offsetWidth + 60 || py > canvas.offsetHeight + 60 || px < -60) {
+        if (px > canvas.offsetWidth + 80 || py > canvas.offsetHeight + 80 || px < -80 || py < -80) {
           clearInterval(anim);
           proj.remove();
           onMiss();
@@ -477,62 +425,64 @@
       }, 16);
     }
 
-    function onHit() {
+    function onHit(px, py) {
       const points = currentItem === '💙' ? 20 : 10;
       score += points;
       document.getElementById('scoreDisplay').textContent = score;
 
-      // Score popup
+      // Popup
       const popup = document.createElement('div');
       popup.className = 'score-popup';
       popup.textContent = '+' + points + (currentItem === '💙' ? ' 💙' : ' 🐟');
-      const oRect = otterEl.getBoundingClientRect();
-      const cRect = canvas.getBoundingClientRect();
-      popup.style.left = (oRect.left - cRect.left) + 'px';
-      popup.style.top = (oRect.top - cRect.top) + 'px';
+      popup.style.left = (px - 30) + 'px';
+      popup.style.top = (py - 30) + 'px';
       canvas.appendChild(popup);
-      setTimeout(() => popup.remove(), 1000);
+      setTimeout(() => popup.remove(), 900);
 
       // Otter reaction
       otterEl.textContent = currentItem === '💙' ? '🥹' : '😋';
       reactionEl.textContent = currentItem === '💙' ? '💙' : '🎉';
+      const oRect = otterEl.getBoundingClientRect();
+      const cRect = canvas.getBoundingClientRect();
+      reactionEl.style.left = (oRect.left - cRect.left + 50) + 'px';
+      reactionEl.style.top = (oRect.top - cRect.top - 20) + 'px';
       reactionEl.style.opacity = '1';
+
       setTimeout(() => {
         otterEl.textContent = '🦦';
         reactionEl.style.opacity = '0';
-      }, 800);
-
-      nextThrow();
+        placeOtter();
+        nextThrow();
+      }, 700);
     }
 
     function onMiss() {
       otterEl.textContent = '😢';
       reactionEl.textContent = '😢';
+      const oRect = otterEl.getBoundingClientRect();
+      const cRect = canvas.getBoundingClientRect();
+      reactionEl.style.left = (oRect.left - cRect.left + 50) + 'px';
+      reactionEl.style.top = (oRect.top - cRect.top - 20) + 'px';
       reactionEl.style.opacity = '1';
+
       setTimeout(() => {
         otterEl.textContent = '🦦';
         reactionEl.style.opacity = '0';
-      }, 600);
-
-      nextThrow();
+        nextThrow();
+      }, 500);
     }
 
     function nextThrow() {
-      currentItem = nextItem;
-      nextItem = Math.random() < 0.4 ? '💙' : '🐟';
-      throwZone.textContent = currentItem;
-      nextItemEl.textContent = nextItem;
-      throwZone.style.opacity = '1';
+      // 40% chance of heart
+      currentItem = Math.random() < 0.4 ? '💙' : '🐟';
+      throwItem.textContent = currentItem;
+      throwItem.style.opacity = '1';
       isFlying = false;
     }
 
     function endGame() {
       clearInterval(timerInterval);
       isFlying = true;
-      window.removeEventListener('mousemove', onDrag);
-      window.removeEventListener('touchmove', onDragTouch);
-      window.removeEventListener('mouseup', release);
-      window.removeEventListener('touchend', release);
 
       if (score > highscore) highscore = score;
 
@@ -551,8 +501,6 @@
     }
 
     function goBack() { window.history.back(); }
-
-    window.addEventListener('resize', resizeCanvas);
   </script>
 </body>
 </html>
