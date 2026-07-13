@@ -347,7 +347,7 @@
       const dy = endY - dragStartY;
       const dist = Math.hypot(dx, dy);
       if (dist < 15) return;
-      const speed = Math.min(dist * 0.018, 0.9);
+     const speed = Math.min(dist * 0.03, 1.5);
       const vx = (dx / dist) * speed * 14;
       const vy = (dy / dist) * speed * 14;
       const origin = getThrowOrigin();
