@@ -874,47 +874,39 @@
       }
 
       function onDragEnd(e) {
-        if (!dragging2) return;
-        const pos = getEventPos(e.changedTouches ? { changedTouches: e.changedTouches } : e);
-        const finalX = pos.x ?? e.clientX;
-        const finalY = pos.y ?? e.clientY;
+  if (!dragging2) return;
+  const finalX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+  const finalY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+  const elevator = document.getElementById('elevator');
+  const elevRect = elevator.getBoundingClientRect();
+  const pid = dragging2.dataset.pieceId;
+  const piece = pieces2.find(p => p.id === pid);
+  let placed = false;
 
-        const elevator = document.getElementById('elevator');
-        const elevRect = elevator.getBoundingClientRect();
+  // Mitte des gezogenen Elements
+  const pieceRect = dragging2.getBoundingClientRect();
+  const pieceCX = pieceRect.left + pieceRect.width / 2;
+  const pieceCY = pieceRect.top + pieceRect.height / 2;
 
-        // Find closest cell
-        const pid = dragging2.dataset.pieceId;
-        const piece = pieces2.find(p => p.id === pid);
-        let placed = false;
-
-        // Check each cell
-        for (let r = 0; r < ROWS; r++) {
-          for (let c = 0; c < COLS; c++) {
-            const cellX = elevRect.left + c * CELL_W + CELL_W / 2;
-            const cellY = elevRect.top + r * CELL_H + CELL_H / 2;
-            const dist = Math.hypot(finalX - drag2OffX + piece.w * CELL_W / 2 - cellX,
-                                    finalY - drag2OffY + piece.h * CELL_H / 2 - cellY);
-
-            if (dist < CELL_W * 0.8) {
-              // Try to place
-              if (canPlace(piece, c, r)) {
-                placeInGrid(piece, dragging2, c, r);
-                placed = true;
-                break;
-              }
-            }
-          }
-          if (placed) break;
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const cellX = elevRect.left + c * CELL_W + CELL_W / 2;
+      const cellY = elevRect.top + r * CELL_H + CELL_H / 2;
+      const dist = Math.hypot(pieceCX - cellX, pieceCY - cellY);
+      if (dist < CELL_W * 0.9) {
+        if (canPlace(piece, c, r)) {
+          placeInGrid(piece, dragging2, c, r);
+          placed = true;
+          break;
         }
-
-        if (!placed) {
-          // Return to staging
-          returnToStaging(dragging2);
-        }
-
-        dragging2 = null;
-        checkWin2();
       }
+    }
+    if (placed) break;
+  }
+  if (!placed) returnToStaging(dragging2);
+  dragging2 = null;
+  checkWin2();
+}
 
       scene.addEventListener('touchstart', onDragStart, { passive: false });
       scene.addEventListener('mousedown', onDragStart);
