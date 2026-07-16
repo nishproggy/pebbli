@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eine wichtige Frage 💙</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #fdf6f0;
+      --card: #ffffff;
+      --text: #2d2320;
+      --soft: #9c8480;
+      --accent: #e05c7a;
+      --accent2: #f4a0b0;
+      --yes: #e05c7a;
+      --shadow: rgba(224, 92, 122, 0.15);
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Lora', serif;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bg-hearts {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-heart {
+      position: absolute;
+      opacity: 0.07;
+      animation: floatUp linear infinite;
+    }
+
+    @keyframes floatUp {
+      0%   { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+      10%  { opacity: 0.07; }
+      90%  { opacity: 0.07; }
+      100% { transform: translateY(-10vh) rotate(20deg); opacity: 0; }
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      background: var(--card);
+      border-radius: 28px;
+      padding: 48px 40px;
+      max-width: 440px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 4px 24px var(--shadow), 0 1px 3px rgba(0,0,0,0.06);
+      animation: cardIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: scale(0.85) translateY(20px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .small-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--accent2);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .question {
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+
+    .subtext {
+      font-style: italic;
+      color: var(--soft);
+      font-size: 14px;
+      margin-bottom: 40px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .btn {
+      padding: 14px 32px;
+      border-radius: 50px;
+      border: none;
+      font-family: 'Lora', serif;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      font-weight: 600;
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+    .btn:active { transform: translateY(0px); }
+
+    .btn-yes {
+      background: var(--yes);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(224, 92, 122, 0.35);
+    }
+
+    .btn-yes:hover { box-shadow: 0 8px 24px rgba(224, 92, 122, 0.45); }
+
+    .btn-no {
+      background: #f5efee;
+      color: var(--soft);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    /* Slider screen */
+    #sliderScreen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      animation: resultIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    #sliderScreen.visible { display: flex; }
+
+    .slider-question {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .slider-sub {
+      font-style: italic;
+      color: var(--soft);
+      font-size: 13px;
+    }
+
+    .percentage-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 52px;
+      font-weight: 600;
+      color: var(--accent);
+      line-height: 1;
+      transition: color 0.3s ease;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 50px;
+      background: #f0e0e5;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 2px 8px rgba(224, 92, 122, 0.4);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .slider-feedback {
+      font-style: italic;
+      color: var(--soft);
+      font-size: 14px;
+      min-height: 24px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-confirm {
+      background: var(--yes);
+      color: #fff;
+      padding: 14px 32px;
+      border-radius: 50px;
+      border: none;
+      font-family: 'Lora', serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(224, 92, 122, 0.35);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease, transform 0.15s ease;
+    }
+
+    .btn-confirm.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .btn-confirm:hover { transform: translateY(-2px); }
+
+    /* Result screens */
+    .result {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      animation: resultIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    .result.visible { display: flex; }
+
+    @keyframes resultIn {
+      from { opacity: 0; transform: scale(0.7); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .big-heart {
+      font-size: 80px;
+      animation: heartbeat 1.2s ease-in-out infinite;
+      display: block;
+      margin-bottom: 20px;
+    }
+
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      15%       { transform: scale(1.18); }
+      30%       { transform: scale(1); }
+      45%       { transform: scale(1.1); }
+    }
+
+    .result-title {
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .result-sub {
+      font-style: italic;
+      color: var(--soft);
+      font-size: 14px;
+      line-height: 1.6;
+      max-width: 280px;
+    }
+
+    .result-gif {
+      width: 180px;
+      border-radius: 16px;
+      margin-bottom: 16px;
+    }
+
+    .try-again {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--accent);
+      margin-top: 24px;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      background: none;
+      border: none;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .confetti-heart {
+      position: fixed;
+      font-size: 22px;
+      pointer-events: none;
+      z-index: 999;
+      animation: confettiFall 1.8s ease-in forwards;
+    }
+
+    @keyframes confettiFall {
+      0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(360deg) scale(0.5); opacity: 0; }
+    }
+
+    .btn-no.running {
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-hearts" id="bgHearts"></div>
+
+  <div class="card" id="card">
+
+    <!-- Frage -->
+    <div id="questionScreen">
+      <span class="small-label">// eine wichtige frage</span>
+      <h1 class="question">Liebst du mich?</h1>
+      <p class="subtext">Denk gut nach, Pebbli. 🤔</p>
+      <div class="buttons">
+        <button class="btn btn-yes" onclick="answerYes()">Ja 💙</button>
+        <button class="btn btn-no" id="noBtn" onmouseover="runAway()" onclick="answerNo()">Nein</button>
+      </div>
+    </div>
+
+    <!-- Schieberegler -->
+    <div id="sliderScreen">
+      <span class="small-label">// okay aber wie sehr?</span>
+      <div class="slider-question">Wie sehr liebst du mich?</div>
+      <div class="slider-sub">Sei ehrlich. 🤨</div>
+      <div class="percentage-display" id="percentDisplay">0%</div>
+      <input type="range" min="0" max="100" value="0" id="loveSlider" oninput="updateSlider(this.value)">
+      <div class="slider-feedback" id="sliderFeedback"></div>
+      <button class="btn-confirm" id="confirmBtn" onclick="confirmSlider()">Das ist meine Antwort 💙</button>
+    </div>
+
+    <!-- Ergebnis: 100% -->
+    <div class="result" id="result100">
+      <img src="otter%207.gif" class="result-gif" alt="Otter 7">
+      <span class="big-heart">💙</span>
+      <div class="result-title">Ich dich auch. ∞</div>
+      <p class="result-sub">Die einzig richtige Antwort. Wie immer. 🥹</p>
+      <a href="spiel.html" class="btn" style="text-decoration:none; margin-top:8px;">Minispiel spielen 🎮</a>
+      <button class="try-again" onclick="reset()">// nochmal fragen</button>
+    </div>
+
+    <!-- Ergebnis: 81-99% -->
+    <div class="result" id="result81">
+      <img src="otter%206.gif" class="result-gif" alt="Otter 6">
+      <div class="result-title">Fast!</div>
+      <p class="result-sub">Aber fast reicht nicht. 😏</p>
+      <button class="try-again" onclick="backToSlider()">// nochmal überlegen</button>
+    </div>
+
+    <!-- Ergebnis: 66-80% -->
+    <div class="result" id="result66">
+      <img src="otter%205.gif" class="result-gif" alt="Otter 5">
+      <div class="result-title">Okay...</div>
+      <p class="result-sub">Aber ich weiß dass da mehr ist. 🤨</p>
+      <button class="try-again" onclick="backToSlider()">// nochmal überlegen</button>
+    </div>
+
+    <!-- Ergebnis: 50-65% -->
+    <div class="result" id="result50">
+      <img src="otter%204.gif" class="result-gif" alt="Otter 4">
+      <div class="result-title">Hmm.</div>
+      <p class="result-sub">Das ist die Hälfte. Die Hälfte reicht nicht. 😔</p>
+      <button class="try-again" onclick="backToSlider()">// nochmal überlegen</button>
+    </div>
+
+    <!-- Ergebnis: 26-49% -->
+    <div class="result" id="result26">
+      <img src="otter%203.gif" class="result-gif" alt="Otter 3">
+      <div class="result-title">Ich bin enttäuscht.</div>
+      <p class="result-sub">Tief enttäuscht. 😔</p>
+      <button class="try-again" onclick="backToSlider()">// nochmal überlegen</button>
+    </div>
+
+    <!-- Ergebnis: 1-5% -->
+    <div class="result" id="result1">
+      <img src="otter%201.gif" class="result-gif" alt="Otter 1">
+      <div class="result-title">Hast du den Schieberegler überhaupt berührt?</div>
+      <p class="result-sub">🙄 Versuch es nochmal.</p>
+      <button class="try-again" onclick="backToSlider()">// nochmal überlegen</button>
+    </div>
+
+    <!-- Ergebnis: 6-25% -->
+    <div class="result" id="result6">
+      <img src="otter%202.gif" class="result-gif" alt="Otter 2">
+      <div class="result-title">Das ist ein Witz, oder?</div>
+      <p class="result-sub">😤 Nochmal.</p>
+      <button class="try-again" onclick="backToSlider()">// nochmal überlegen</button>
+    </div>
+
+    <!-- Nein Ergebnis -->
+    <div class="result" id="noResult">
+      <span style="font-size:64px; margin-bottom: 16px;">🤨</span>
+      <div class="result-title">Excuse me?</div>
+      <p class="result-sub">Das war eindeutig ein Bug.<br>Bitte neu starten.</p>
+      <button class="try-again" onclick="reset()">// try again</button>
+    </div>
+
+  </div>
+
+  <script>
+    // Floating hearts
+    const bgHearts = document.getElementById('bgHearts');
+    const emojis = ['💙', '🩵', '✨', '💫'];
+    for (let i = 0; i < 18; i++) {
+      const h = document.createElement('div');
+      h.className = 'bg-heart';
+      h.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      h.style.left = Math.random() * 100 + 'vw';
+      h.style.animationDuration = (8 + Math.random() * 12) + 's';
+      h.style.animationDelay = (Math.random() * 10) + 's';
+      h.style.fontSize = (12 + Math.random() * 16) + 'px';
+      bgHearts.appendChild(h);
+    }
+
+    // Nein button läuft weg
+    let noMoved = 0;
+    function runAway() {
+      if (noMoved >= 3) return;
+      const btn = document.getElementById('noBtn');
+      const card = document.getElementById('card');
+      const cardRect = card.getBoundingClientRect();
+      const randX = (Math.random() - 0.5) * (cardRect.width - 80) * 0.8;
+      const randY = (Math.random() - 0.5) * (cardRect.height - 80) * 0.6;
+      btn.style.transform = `translate(${randX}px, ${randY}px)`;
+      btn.classList.add('running');
+      noMoved++;
+    }
+
+    function answerYes() {
+      document.getElementById('questionScreen').style.display = 'none';
+      document.getElementById('sliderScreen').classList.add('visible');
+    }
+
+    function answerNo() {
+      document.getElementById('questionScreen').style.display = 'none';
+      document.getElementById('noResult').classList.add('visible');
+    }
+
+    function updateSlider(value) {
+      const display = document.getElementById('percentDisplay');
+      const feedback = document.getElementById('sliderFeedback');
+      const confirmBtn = document.getElementById('confirmBtn');
+
+      display.textContent = value + '%';
+
+      // Farbe je nach Wert
+      if (value == 100) {
+        display.style.color = '#3fb950';
+        feedback.textContent = '✓ Perfekte Antwort. 💙';
+        confirmBtn.classList.add('visible');
+      } else if (value >= 76) {
+        display.style.color = '#e05c7a';
+        feedback.textContent = 'Schon gut... aber noch nicht genug 😏';
+        confirmBtn.classList.add('visible');
+      } else if (value >= 26) {
+        display.style.color = '#e08c2a';
+        feedback.textContent = 'Das ist zu wenig. 🤨';
+        confirmBtn.classList.add('visible');
+      } else if (value > 0) {
+        display.style.color = '#cc3333';
+        feedback.textContent = 'Ernsthaft? 😤';
+        confirmBtn.classList.add('visible');
+      } else {
+        display.style.color = '#e05c7a';
+        feedback.textContent = '';
+        confirmBtn.classList.remove('visible');
+      }
+    }
+
+    function confirmSlider() {
+      const value = parseInt(document.getElementById('loveSlider').value);
+      document.getElementById('sliderScreen').classList.remove('visible');
+
+      if (value === 100) {
+        document.getElementById('result100').classList.add('visible');
+        launchConfetti();
+      } else if (value >= 81) {
+        document.getElementById('result81').classList.add('visible');
+      } else if (value >= 66) {
+        document.getElementById('result66').classList.add('visible');
+      } else if (value >= 50) {
+        document.getElementById('result50').classList.add('visible');
+      } else if (value >= 26) {
+        document.getElementById('result26').classList.add('visible');
+      } else if (value >= 6) {
+        document.getElementById('result6').classList.add('visible');
+      } else {
+        document.getElementById('result1').classList.add('visible');
+      }
+    }
+
+    function backToSlider() {
+      document.querySelectorAll('.result').forEach(r => r.classList.remove('visible'));
+      document.getElementById('loveSlider').value = 0;
+      updateSlider(0);
+      document.getElementById('percentDisplay').textContent = '0%';
+      document.getElementById('sliderFeedback').textContent = '';
+      document.getElementById('confirmBtn').classList.remove('visible');
+      document.getElementById('sliderScreen').classList.add('visible');
+    }
+
+    function launchConfetti() {
+      const hearts = ['💙', '🩵', '💗', '✨', '💫', '💝'];
+      for (let i = 0; i < 24; i++) {
+        setTimeout(() => {
+          const el = document.createElement('div');
+          el.className = 'confetti-heart';
+          el.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+          el.style.left = (10 + Math.random() * 80) + 'vw';
+          el.style.top = '-40px';
+          el.style.animationDuration = (1.2 + Math.random() * 1.2) + 's';
+          document.body.appendChild(el);
+          setTimeout(() => el.remove(), 2500);
+        }, i * 60);
+      }
+    }
+
+    function reset() {
+      document.getElementById('questionScreen').style.display = 'block';
+      document.querySelectorAll('.result').forEach(r => r.classList.remove('visible'));
+      document.getElementById('sliderScreen').classList.remove('visible');
+      document.getElementById('loveSlider').value = 0;
+      updateSlider(0);
+      const btn = document.getElementById('noBtn');
+      btn.style.transform = '';
+      noMoved = 0;
+    }
+  </script>
+
+</body>
+</html>
