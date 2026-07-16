@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minispiele 💙</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #fdf6f0; --card: #fff; --text: #2d2320;
+      --soft: #9c8480; --accent: #e05c7a; --shadow: rgba(224,92,122,0.15);
+    }
+    body { min-height:100vh; background:var(--bg); font-family:'Lora',serif; overflow:hidden; }
+
+    /* ===== SCREENS ===== */
+    .page { display:none; position:fixed; inset:0; flex-direction:column; align-items:center; justify-content:center; }
+    .page.active { display:flex; }
+
+    /* ===== CARD ===== */
+    .card { background:var(--card); border-radius:28px; padding:40px 32px; width:90%; max-width:400px; text-align:center; box-shadow:0 4px 24px var(--shadow); display:flex; flex-direction:column; align-items:center; gap:16px; }
+    .card h1 { font-size:24px; color:var(--text); }
+    .card p { font-size:14px; color:var(--soft); line-height:1.7; }
+    .label { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--soft); letter-spacing:0.08em; }
+    .btn { background:var(--accent); color:#fff; border:none; border-radius:50px; padding:14px 28px; font-family:'Lora',serif; font-size:15px; font-weight:600; cursor:pointer; width:100%; }
+    .btn-sec { background:transparent; color:var(--soft); border:2px solid #e8dcd8; border-radius:50px; padding:12px 28px; font-family:'Lora',serif; font-size:14px; cursor:pointer; width:100%; }
+    .highscore { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--soft); }
+
+    /* ===== GAME HEADER ===== */
+    .game-header { width:100%; display:flex; justify-content:space-between; align-items:center; padding:12px 20px; background:var(--card); box-shadow:0 2px 8px var(--shadow); flex-shrink:0; }
+    .game-stat { font-family:'JetBrains Mono',monospace; font-size:14px; color:var(--text); }
+    .timer-bar-wrap { width:100%; height:5px; background:#f0e8e4; flex-shrink:0; }
+    .timer-bar { height:100%; background:var(--accent); transition:width 1s linear; }
+
+    /* ===== MENU ===== */
+    #menuPage { background:var(--bg); }
+    .menu-grid { display:flex; flex-direction:column; gap:12px; width:100%; max-width:340px; }
+    .menu-btn { background:var(--card); border:2px solid #f0e8e4; border-radius:20px; padding:18px 24px; font-family:'Lora',serif; font-size:16px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:border-color 0.2s; }
+    .menu-btn:hover { border-color:var(--accent); }
+    .menu-btn .emoji { font-size:28px; }
+    .menu-btn .info { text-align:left; }
+    .menu-btn .info span { display:block; font-size:12px; color:var(--soft); margin-top:2px; }
+
+    /* ===== HERZEN SPIEL ===== */
+    #herzPage { background:var(--bg); }
+    #herzCanvas { flex:1; position:relative; overflow:hidden; width:100%; }
+    .otter-char { position:absolute; font-size:48px; bottom:20px; transition:left 0.1s; }
+    .falling-heart { position:absolute; font-size:28px; animation:fall linear forwards; }
+    @keyframes fall { from{transform:translateY(-40px)} to{transform:translateY(110vh)} }
+    .collect-anim { position:fixed; font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:700; color:var(--accent); pointer-events:none; animation:floatUp 0.8s ease forwards; z-index:100; }
+    @keyframes floatUp { 0%{opacity:1;transform:translateY(0)} 100%{opacity:0;transform:translateY(-40px)} }
+
+    /* ===== KRAUL SPIEL ===== */
+    #kraulPage { background:var(--bg); }
+    #kraulCanvas { flex:1; position:relative; overflow:hidden; width:100%; }
+    .kraul-btn { position:absolute; border:none; border-radius:50px; padding:10px 18px; font-family:'Lora',serif; font-size:13px; cursor:pointer; background:var(--accent); color:white; box-shadow:0 2px 8px var(--shadow); }
+
+    /* ===== WERFEN SPIEL ===== */
+    #werfenPage { background:var(--bg); }
+    #werfenCanvas { flex:1; position:relative; overflow:hidden; width:100%; touch-action:none; }
+    #wOtter { position:absolute; font-size:56px; transition:left 0.3s ease, top 0.3s ease; z-index:2; }
+    #wThrowItem { position:absolute; font-size:40px; bottom:30px; left:50%; transform:translateX(-50%); cursor:grab; z-index:3; transition:opacity 0.2s; touch-action:none; }
+    #wReaction { position:absolute; font-size:24px; opacity:0; transition:opacity 0.3s; pointer-events:none; z-index:4; }
+    #wHint { position:absolute; bottom:90px; left:50%; transform:translateX(-50%); font-size:13px; color:var(--soft); font-style:italic; white-space:nowrap; pointer-events:none; }
+    .projectile { position:absolute; font-size:32px; pointer-events:none; z-index:5; }
+    .score-popup { position:absolute; font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:700; color:var(--accent); pointer-events:none; animation:floatUp 0.9s ease forwards; z-index:6; }
+
+    /* ===== PINGPONG ===== */
+    #ppPage { background:#1a1a2a; }
+    #ppCanvas { flex:1; position:relative; overflow:hidden; width:100%; touch-action:none; }
+    .pp-paddle { position:absolute; width:80px; height:12px; border-radius:6px; transform:translateX(-50%); font-size:20px; display:flex; align-items:center; justify-content:center; }
+    #ppPlayerPaddle { bottom:20px; background:#5b8dd9; }
+    #ppCompPaddle { top:20px; background:#e05c7a; font-size:16px; }
+    #ppBall { position:absolute; width:16px; height:16px; background:#e05c7a; border-radius:50%; transform:translate(-50%,-50%); }
+    #ppHearts { position:absolute; bottom:45px; left:50%; transform:translateX(-50%); font-size:16px; }
+    .flash { position:absolute; inset:0; background:rgba(224,92,122,0.2); pointer-events:none; animation:flashAnim 0.3s ease; }
+    @keyframes flashAnim { 0%{opacity:1} 100%{opacity:0} }
+
+    /* ===== END SCREEN ===== */
+    #endPage { background:var(--bg); }
+  </style>
+</head>
+<body>
+
+<!-- MENU -->
+<div class="page active" id="menuPage">
+  <div style="text-align:center;margin-bottom:24px;">
+    <div class="label">// minispiele</div>
+    <h1 style="font-size:26px;margin-top:8px;color:var(--text);">Was spielen wir? 🦦</h1>
+  </div>
+  <div class="menu-grid">
+    <button class="menu-btn" onclick="startHerzen()">
+      <span class="emoji">💙</span>
+      <div class="info">Herzen sammeln<span>Otter steuern & Herzen fangen</span></div>
+    </button>
+    <button class="menu-btn" onclick="startKraul()">
+      <span class="emoji">🐾</span>
+      <div class="info">Kraul mich!<span>Den richtigen Button treffen</span></div>
+    </button>
+    <button class="menu-btn" onclick="startWerfen()">
+      <span class="emoji">🐟</span>
+      <div class="info">Fische werfen<span>Dem Otter etwas zuwerfen</span></div>
+    </button>
+    <button class="menu-btn" onclick="startPingpong()">
+      <span class="emoji">🏓</span>
+      <div class="info">Ping Pong<span>Gegen den Computer spielen</span></div>
+    </button>
+  </div>
+</div>
+
+<!-- HERZEN SPIEL -->
+<div class="page" id="herzPage">
+  <div class="game-header">
+    <div class="game-stat">💙 <span id="hScore">0</span></div>
+    <div class="game-stat" style="font-style:italic;color:var(--soft);font-size:13px;">Herzen sammeln</div>
+    <div class="game-stat">⏱ <span id="hTimer">30</span>s</div>
+  </div>
+  <div class="timer-bar-wrap"><div class="timer-bar" id="hTimerBar"></div></div>
+  <div id="herzCanvas">
+    <div class="otter-char" id="hOtter">🦦</div>
+  </div>
+</div>
+
+<!-- KRAUL SPIEL -->
+<div class="page" id="kraulPage">
+  <div class="game-header">
+    <div class="game-stat">🐾 <span id="kScore">0</span></div>
+    <div class="game-stat" style="font-style:italic;color:var(--soft);font-size:13px;">Kraul mich!</div>
+    <div class="game-stat">⏱ <span id="kTimer">30</span>s</div>
+  </div>
+  <div class="timer-bar-wrap"><div class="timer-bar" id="kTimerBar"></div></div>
+  <div id="kraulCanvas">
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);font-size:80px;pointer-events:none;" id="kOtter">🦦</div>
+  </div>
+</div>
+
+<!-- WERFEN SPIEL -->
+<div class="page" id="werfenPage">
+  <div class="game-header">
+    <div class="game-stat">🎯 <span id="wScore">0</span></div>
+    <div class="game-stat" style="font-style:italic;color:var(--soft);font-size:13px;">Wirf dem Otter zu!</div>
+    <div class="game-stat">⏱ <span id="wTimer">30</span>s</div>
+  </div>
+  <div class="timer-bar-wrap"><div class="timer-bar" id="wTimerBar"></div></div>
+  <div id="werfenCanvas">
+    <div id="wOtter">🦦</div>
+    <div id="wThrowItem">🐟</div>
+    <div id="wReaction"></div>
+    <div id="wHint">zieh in Richtung Otter &amp; lass los</div>
+  </div>
+</div>
+
+<!-- PINGPONG SPIEL -->
+<div class="page" id="ppPage">
+  <div class="game-header" style="background:rgba(255,255,255,0.05);">
+    <div class="game-stat" style="color:white;">🤖 Comp</div>
+    <div class="game-stat" style="color:white;font-size:13px;font-style:italic;">Ping Pong</div>
+    <div class="game-stat" style="color:white;">🦦 Pebbli</div>
+  </div>
+  <div id="ppCanvas">
+    <div class="pp-paddle" id="ppPlayerPaddle" style="left:50%;">🦦</div>
+    <div class="pp-paddle" id="ppCompPaddle" style="left:50%;">🤖</div>
+    <div id="ppBall"></div>
+    <div id="ppHearts">❤️❤️❤️</div>
+  </div>
+</div>
+
+<!-- END SCREEN -->
+<div class="page" id="endPage">
+  <div class="card">
+    <span class="label">// game over</span>
+    <div id="endEmoji" style="font-size:52px;">🎉</div>
+    <h1 id="endTitle">Zeit!</h1>
+    <p id="endMsg"></p>
+    <div style="font-size:32px;font-weight:600;color:var(--accent);" id="endScore"></div>
+    <div class="highscore">Highscore: <span id="endHighscore">0</span></div>
+    <button class="btn" onclick="restartLastGame()">Nochmal spielen 🎮</button>
+    <button class="btn-sec" onclick="showMenu()">← Zurück zum Menü</button>
+  </div>
+</div>
+
+<script>
+  // ===== NAVIGATION =====
+  function showPage(id){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+  function showMenu(){ stopAll(); showPage('menuPage'); }
+
+  function stopAll(){
+    clearInterval(hInterval); clearInterval(hTimerInt);
+    clearInterval(kInterval); clearInterval(kTimerInt);
+    clearInterval(wTimerInt);
+    ppRunning=false;
+    if(ppAnimId) cancelAnimationFrame(ppAnimId);
+    document.getElementById('werfenCanvas').querySelectorAll('.projectile,.score-popup').forEach(e=>e.remove());
+    document.getElementById('herzCanvas').querySelectorAll('.falling-heart').forEach(e=>e.remove());
+    document.getElementById('kraulCanvas').querySelectorAll('.kraul-btn').forEach(e=>e.remove());
+    wIsFlying=false; wIsDragging=false;
+  }
+
+  var lastGame = null;
+
+  function getHs(key){ try{return parseInt(localStorage.getItem(key)||'0');}catch(e){return 0;} }
+  function setHs(key,val){ try{localStorage.setItem(key,val);}catch(e){} }
+
+  function restartLastGame(){
+    if(lastGame==='herzen') startHerzen();
+    else if(lastGame==='kraul') startKraul();
+    else if(lastGame==='werfen') startWerfen();
+    else if(lastGame==='pingpong') startPingpong();
+    else showMenu();
+  }
+
+  function showEnd(emoji, title, msg, score){
+    document.getElementById('endEmoji').textContent = emoji;
+    document.getElementById('endTitle').textContent = title;
+    document.getElementById('endMsg').textContent = msg;
+    document.getElementById('endScore').textContent = score + ' Punkte';
+    var hsKey = 'hs_' + (lastGame||'');
+    var hs = getHs(hsKey);
+    if(score > hs){ hs = score; setHs(hsKey, hs); }
+    document.getElementById('endHighscore').textContent = hs;
+    showPage('endPage');
+  }
+
+  // ===== HERZEN =====
+  var hScore=0, hTimeLeft=30, hInterval=null, hTimerInt=null, hOtterX=50;
+
+  function startHerzen(){
+    lastGame="herzen";
+    hScore=0; hTimeLeft=30; hOtterX=50;
+    document.getElementById('hScore').textContent='0';
+    document.getElementById('hTimer').textContent='30';
+    document.getElementById('hTimerBar').style.width='100%';
+    document.getElementById('hOtter').style.left='50%';
+    document.getElementById('herzCanvas').querySelectorAll('.falling-heart').forEach(e=>e.remove());
+    showPage('herzPage');
+    var canvas=document.getElementById('herzCanvas');
+    canvas.addEventListener('mousemove',hMouseMove);
+    canvas.addEventListener('touchmove',hTouchMove,{passive:true});
+    hInterval=setInterval(spawnHeart,800);
+    hTimerInt=setInterval(function(){
+      hTimeLeft--;
+      document.getElementById('hTimer').textContent=hTimeLeft;
+      document.getElementById('hTimerBar').style.width=(hTimeLeft/30*100)+'%';
+      if(hTimeLeft<=0){
+        clearInterval(hInterval);clearInterval(hTimerInt);
+        canvas.removeEventListener('mousemove',hMouseMove);
+        canvas.removeEventListener('touchmove',hTouchMove);
+        var msg=hScore>=200?'Weltrekord! 🥹':hScore>=100?'Super Pebbli! 😊':'Mehr Herzen nächstes Mal! 💙';
+        showEnd('💙','Zeit!',msg,hScore);
+      }
+    },1000);
+  }
+
+  function hMouseMove(e){
+    var r=this.getBoundingClientRect();
+    hOtterX=((e.clientX-r.left)/r.width)*100;
+    hOtterX=Math.max(5,Math.min(95,hOtterX));
+    document.getElementById('hOtter').style.left=hOtterX+'%';
+  }
+  function hTouchMove(e){
+    var r=this.getBoundingClientRect();
+    hOtterX=((e.touches[0].clientX-r.left)/r.width)*100;
+    hOtterX=Math.max(5,Math.min(95,hOtterX));
+    document.getElementById('hOtter').style.left=hOtterX+'%';
+  }
+
+  function spawnHeart(){
+    if(hTimeLeft<=0)return;
+    var canvas=document.getElementById('herzCanvas');
+    var heart=document.createElement('div');
+    heart.className='falling-heart';
+    var items=['💙','🩵','💗','💝','✨'];
+    heart.textContent=items[Math.floor(Math.random()*items.length)];
+    heart.style.left=(5+Math.random()*90)+'%';
+    var dur=2+Math.random()*2;
+    heart.style.animationDuration=dur+'s';
+    canvas.appendChild(heart);
+    var check=setInterval(function(){
+      if(!heart.parentNode){clearInterval(check);return;}
+      var hr=heart.getBoundingClientRect();
+      var or=document.getElementById('hOtter').getBoundingClientRect();
+      if(hr.left<or.right&&hr.right>or.left&&hr.top<or.bottom&&hr.bottom>or.top){
+        clearInterval(check);
+        hScore+=10;
+        document.getElementById('hScore').textContent=hScore;
+        var anim=document.createElement('div');
+        anim.className='collect-anim';anim.textContent='+10 💙';
+        anim.style.left=hr.left+'px';anim.style.top=hr.top+'px';
+        document.body.appendChild(anim);
+        setTimeout(function(){anim.remove();},800);
+        heart.remove();
+      }
+    },50);
+    setTimeout(function(){if(heart.parentNode)heart.remove();clearInterval(check);},dur*1000);
+  }
+
+  // ===== KRAUL =====
+  var kScore=0,kTimeLeft=30,kInterval=null,kTimerInt=null;
+  var kRealTexts=['🐾 Kraul mich!','🐾 Hier!','🐾 Bitte!','💙 Ja!','🐾 Genau da!'];
+  var kFakeTexts=['🙅 Nicht!','❌ Falsch!','😤 Au!','🚫 Nein!','😾 Weg!'];
+
+  function startKraul(){
+    lastGame="kraul";
+    kScore=0;kTimeLeft=30;
+    document.getElementById('kScore').textContent='0';
+    document.getElementById('kTimer').textContent='30';
+    document.getElementById('kTimerBar').style.width='100%';
+    document.getElementById('kraulCanvas').querySelectorAll('.kraul-btn').forEach(e=>e.remove());
+    showPage('kraulPage');
+    spawnKraulBtns();
+    kInterval=setInterval(function(){if(!document.getElementById('kraulCanvas').querySelector('.kraul-btn'))spawnKraulBtns();},2500);
+    kTimerInt=setInterval(function(){
+      kTimeLeft--;
+      document.getElementById('kTimer').textContent=kTimeLeft;
+      document.getElementById('kTimerBar').style.width=(kTimeLeft/30*100)+'%';
+      if(kTimeLeft<=0){
+        clearInterval(kInterval);clearInterval(kTimerInt);
+        document.getElementById('kraulCanvas').querySelectorAll('.kraul-btn').forEach(e=>e.remove());
+        var msg=kScore>=200?'Kraul-Meister! 🥹':kScore>=100?'Gut gemacht! 😊':'Mehr üben! 🐾';
+        showEnd('🐾','Zeit!',msg,kScore);
+      }
+    },1000);
+  }
+
+  function spawnKraulBtns(){
+    if(kTimeLeft<=0)return;
+    var canvas=document.getElementById('kraulCanvas');
+    canvas.querySelectorAll('.kraul-btn').forEach(e=>e.remove());
+    var count=3;
+    var realIdx=Math.floor(Math.random()*count);
+    for(var i=0;i<count;i++){
+      (function(idx){
+        var isReal=idx===realIdx;
+        var btn=document.createElement('button');
+        btn.className='kraul-btn';
+        btn.textContent=isReal?kRealTexts[Math.floor(Math.random()*kRealTexts.length)]:kFakeTexts[Math.floor(Math.random()*kFakeTexts.length)];
+        btn.style.left=(5+Math.random()*80)+'%';
+        btn.style.top=(5+Math.random()*75)+'%';
+        canvas.appendChild(btn);
+        function onClick(){
+          var r=btn.getBoundingClientRect();
+          if(isReal){
+            kScore+=15;
+            document.getElementById('kScore').textContent=kScore;
+            var a=document.createElement('div');a.className='collect-anim';a.textContent='+15 🐾';
+            a.style.left=r.left+'px';a.style.top=r.top+'px';
+            document.body.appendChild(a);setTimeout(function(){a.remove();},800);
+            var otter=document.getElementById('kOtter');
+            otter.style.transform='translate(-50%,-60%) scale(1.2)';
+            setTimeout(function(){otter.style.transform='translate(-50%,-60%) scale(1)';},200);
+          }else{
+            kScore=Math.max(0,kScore-10);
+            document.getElementById('kScore').textContent=kScore;
+            var a=document.createElement('div');a.className='collect-anim';a.textContent='-10 😤';a.style.color='#888';
+            a.style.left=r.left+'px';a.style.top=r.top+'px';
+            document.body.appendChild(a);setTimeout(function(){a.remove();},800);
+            var otter=document.getElementById('kOtter');
+            otter.style.transform='translate(-50%,-60%) rotate(-10deg)';
+            setTimeout(function(){otter.style.transform='translate(-50%,-60%) rotate(0)';},300);
+          }
+          canvas.querySelectorAll('.kraul-btn').forEach(e=>e.remove());
+          clearInterval(kInterval);
+          setTimeout(function(){
+            spawnKraulBtns();
+            kInterval=setInterval(function(){if(!canvas.querySelector('.kraul-btn'))spawnKraulBtns();},2500);
+          },600);
+        }
+        btn.onclick=onClick;
+        btn.ontouchend=function(e){e.preventDefault();onClick();};
+        setTimeout(function(){if(btn.parentNode)btn.remove();},2500);
+      })(i);
+    }
+  }
+
+  // ===== WERFEN =====
+  var wScore=0,wHighscore=0,wTimeLeft=30,wTimerInt=null;
+  var wIsFlying=false,wIsDragging=false,wDragStartX=0,wDragStartY=0;
+  var wCurrentItem='🐟',wHintShown=false;
+
+  function startWerfen(){
+    lastGame="werfen";
+    wScore=0;wTimeLeft=30;wIsFlying=false;wIsDragging=false;wHintShown=false;wCurrentItem='🐟';
+    document.getElementById('wScore').textContent='0';
+    document.getElementById('wTimer').textContent='30';
+    document.getElementById('wTimerBar').style.width='100%';
+    document.getElementById('wThrowItem').textContent='🐟';
+    document.getElementById('wThrowItem').style.opacity='1';
+    document.getElementById('wOtter').textContent='🦦';
+    document.getElementById('wReaction').style.opacity='0';
+    document.getElementById('wHint').style.opacity='0.7';
+    document.getElementById('werfenCanvas').querySelectorAll('.projectile,.score-popup').forEach(e=>e.remove());
+    showPage('werfenPage');
+    setTimeout(wPlaceOtter,100);
+    wTimerInt=setInterval(function(){
+      wTimeLeft--;
+      document.getElementById('wTimer').textContent=wTimeLeft;
+      document.getElementById('wTimerBar').style.width=(wTimeLeft/30*100)+'%';
+      if(wTimeLeft<=0){
+        clearInterval(wTimerInt);
+        wIsFlying=true;
+        if(wScore>wHighscore)wHighscore=wScore;
+        var msg=wScore>=200?'Weltklasse! 🥹':wScore>=120?'Sehr gut! 🎯':wScore>=60?'Nicht schlecht! 😊':'Der Otter wartet noch... 😢';
+        showEnd('🎯','Zeit!',msg,wScore);
+      }
+    },1000);
+    var ti=document.getElementById('wThrowItem');
+    ti.addEventListener('touchstart',wOnTouchStart,{passive:true});
+    window.addEventListener('touchend',wOnTouchEnd);
+    ti.addEventListener('mousedown',wOnMouseDown);
+    window.addEventListener('mouseup',wOnMouseUp);
+  }
+
+  function wPlaceOtter(){
+    var canvas=document.getElementById('werfenCanvas');
+    var cw=canvas.offsetWidth,ch=canvas.offsetHeight,m=80;
+    var x=m+Math.random()*(cw-m*2);
+    var y=m+Math.random()*(ch*0.55);
+    var otter=document.getElementById('wOtter');
+    otter.style.left=(x-28)+'px';otter.style.top=(y-28)+'px';
+  }
+
+  function wGetOrigin(){
+    var ti=document.getElementById('wThrowItem');
+    var canvas=document.getElementById('werfenCanvas');
+    var r=ti.getBoundingClientRect(),cr=canvas.getBoundingClientRect();
+    return{x:r.left+r.width/2-cr.left,y:r.top+r.height/2-cr.top};
+  }
+
+  function wOnTouchStart(e){if(wIsFlying)return;wIsDragging=true;wDragStartX=e.touches[0].clientX;wDragStartY=e.touches[0].clientY;if(!wHintShown){document.getElementById('wHint').style.opacity='0';wHintShown=true;}}
+  function wOnTouchEnd(e){
+    if(!wIsDragging)return;wIsDragging=false;
+    var dx=e.changedTouches[0].clientX-wDragStartX,dy=e.changedTouches[0].clientY-wDragStartY;
+    var dist=Math.hypot(dx,dy);if(dist<15)return;
+    var speed=Math.min(dist*0.03,1.5);
+    wThrow(wGetOrigin().x,wGetOrigin().y,(dx/dist)*speed*14,(dy/dist)*speed*14);
+  }
+  function wOnMouseDown(e){if(wIsFlying)return;wIsDragging=true;wDragStartX=e.clientX;wDragStartY=e.clientY;if(!wHintShown){document.getElementById('wHint').style.opacity='0';wHintShown=true;}}
+  function wOnMouseUp(e){
+    if(!wIsDragging)return;wIsDragging=false;
+    var dx=e.clientX-wDragStartX,dy=e.clientY-wDragStartY;
+    var dist=Math.hypot(dx,dy);if(dist<10)return;
+    var speed=Math.min(dist*0.018,0.9);
+    wThrow(wGetOrigin().x,wGetOrigin().y,(dx/dist)*speed*14,(dy/dist)*speed*14);
+  }
+
+  function wThrow(sx,sy,vx,vy){
+    if(wIsFlying||wTimeLeft<=0)return;
+    wIsFlying=true;
+    document.getElementById('wThrowItem').style.opacity='0.3';
+    var canvas=document.getElementById('werfenCanvas');
+    var proj=document.createElement('div');proj.className='projectile';proj.textContent=wCurrentItem;
+    proj.style.left=sx+'px';proj.style.top=sy+'px';canvas.appendChild(proj);
+    var px=sx,py=sy,pvx=vx,pvy=vy;
+    var otter=document.getElementById('wOtter');
+    var or=otter.getBoundingClientRect(),cr=canvas.getBoundingClientRect();
+    var ox=or.left-cr.left+or.width/2,oy=or.top-cr.top+or.height/2;
+    var anim=setInterval(function(){
+      px+=pvx;py+=pvy;pvy+=0.25;
+      proj.style.left=(px-20)+'px';proj.style.top=(py-20)+'px';
+      if(Math.hypot(px-ox,py-oy)<52){
+        clearInterval(anim);proj.remove();wHit(px,py);return;
+      }
+      if(px>canvas.offsetWidth+80||py>canvas.offsetHeight+80||px<-80||py<-80){
+        clearInterval(anim);proj.remove();wMiss();
+      }
+    },16);
+  }
+
+  function wHit(px,py){
+    var pts=wCurrentItem==='💙'?20:10;
+    wScore+=pts;document.getElementById('wScore').textContent=wScore;
+    var canvas=document.getElementById('werfenCanvas');
+    var popup=document.createElement('div');popup.className='score-popup';
+    popup.textContent='+'+pts+(wCurrentItem==='💙'?' 💙':' 🐟');
+    popup.style.left=(px-30)+'px';popup.style.top=(py-30)+'px';canvas.appendChild(popup);
+    setTimeout(function(){popup.remove();},900);
+    var otter=document.getElementById('wOtter');
+    otter.textContent=wCurrentItem==='💙'?'🥹':'😋';
+    var re=document.getElementById('wReaction');
+    re.textContent=wCurrentItem==='💙'?'💙':'🎉';
+    var or=otter.getBoundingClientRect(),cr=canvas.getBoundingClientRect();
+    re.style.left=(or.left-cr.left+50)+'px';re.style.top=(or.top-cr.top-20)+'px';re.style.opacity='1';
+    setTimeout(function(){otter.textContent='🦦';re.style.opacity='0';wPlaceOtter();wNextThrow();},700);
+  }
+
+  function wMiss(){
+    var otter=document.getElementById('wOtter');
+    var canvas=document.getElementById('werfenCanvas');
+    otter.textContent='😢';
+    var re=document.getElementById('wReaction');
+    re.textContent='😢';
+    var or=otter.getBoundingClientRect(),cr=canvas.getBoundingClientRect();
+    re.style.left=(or.left-cr.left+50)+'px';re.style.top=(or.top-cr.top-20)+'px';re.style.opacity='1';
+    setTimeout(function(){otter.textContent='🦦';re.style.opacity='0';wNextThrow();},500);
+  }
+
+  function wNextThrow(){
+    wCurrentItem=Math.random()<0.4?'💙':'🐟';
+    document.getElementById('wThrowItem').textContent=wCurrentItem;
+    document.getElementById('wThrowItem').style.opacity='1';
+    wIsFlying=false;
+  }
+
+  // ===== PINGPONG =====
+  var ppRunning=false,ppAnimId=null;
+  var ppBallX=50,ppBallY=50,ppVX=0.2,ppVY=0.2,ppSpeedMult=1;
+  var ppPlayerX=50,ppCompX=50,ppHearts=3;
+
+  function startPingpong(){
+    lastGame="pingpong";
+    ppRunning=false;
+    if(ppAnimId)cancelAnimationFrame(ppAnimId);
+    ppBallX=50;ppBallY=50;ppVX=0.2;ppVY=0.2;ppSpeedMult=1;
+    ppPlayerX=50;ppCompX=50;ppHearts=3;
+    document.getElementById('ppHearts').textContent='❤️❤️❤️';
+    document.getElementById('ppPlayerPaddle').style.left='50%';
+    document.getElementById('ppCompPaddle').style.left='50%';
+    document.getElementById('ppBall').style.left='50%';
+    document.getElementById('ppBall').style.top='50%';
+    showPage('ppPage');
+    var canvas=document.getElementById('ppCanvas');
+    canvas.addEventListener('touchmove',ppTouchMove,{passive:true});
+    canvas.addEventListener('mousemove',ppMouseMove);
+    ppRunning=true;
+    ppAnimId=requestAnimationFrame(ppLoop);
+  }
+
+  function ppTouchMove(e){
+    var r=document.getElementById('ppCanvas').getBoundingClientRect();
+    ppPlayerX=((e.touches[0].clientX-r.left)/r.width)*100;
+    ppPlayerX=Math.max(5,Math.min(95,ppPlayerX));
+  }
+  function ppMouseMove(e){
+    var r=document.getElementById('ppCanvas').getBoundingClientRect();
+    ppPlayerX=((e.clientX-r.left)/r.width)*100;
+    ppPlayerX=Math.max(5,Math.min(95,ppPlayerX));
+  }
+
+  function ppLoop(){
+    if(!ppRunning)return;
+    var canvas=document.getElementById('ppCanvas');
+    var W=canvas.offsetWidth,H=canvas.offsetHeight;
+    ppBallX+=ppVX*ppSpeedMult*(W/100);
+    ppBallY+=ppVY*ppSpeedMult*(H/100);
+    if(ppBallX<1){ppBallX=1;ppVX*=-1;}
+    if(ppBallX>99){ppBallX=99;ppVX*=-1;}
+    // AI
+    var target=ppVY<0?ppBallX:50;
+    if(Math.random()<0.02)target+=(Math.random()-0.5)*20;
+    if(ppCompX<target-1)ppCompX+=0.8;
+    else if(ppCompX>target+1)ppCompX-=0.8;
+    // Player paddle
+    var ballAbsY=ppBallY/100*H,playerAbsY=H-32;
+    if(ballAbsY>playerAbsY-10&&ballAbsY<playerAbsY+10){
+      var pLeft=(ppPlayerX/100*W)-40,pRight=(ppPlayerX/100*W)+40,bX=ppBallX/100*W;
+      if(bX>pLeft&&bX<pRight){ppVY*=-1;ppBallY=playerAbsY/H*100-2;ppSpeedMult=Math.min(2.5,ppSpeedMult+0.08);}
+    }
+    // Comp paddle
+    var compAbsY=32;
+    if(ballAbsY<compAbsY+10&&ballAbsY>compAbsY-10){
+      var cLeft=(ppCompX/100*W)-40,cRight=(ppCompX/100*W)+40,bX2=ppBallX/100*W;
+      if(bX2>cLeft&&bX2<cRight){ppVY*=-1;ppBallY=compAbsY/H*100+2;}
+    }
+    if(ppBallY<0){ppBallY=50;ppBallX=50;ppVY=0.2;}
+    if(ppBallY>100){
+      ppHearts--;
+      document.getElementById('ppHearts').textContent='❤️'.repeat(Math.max(0,ppHearts));
+      var flash=document.createElement('div');flash.className='flash';canvas.appendChild(flash);setTimeout(function(){flash.remove();},300);
+      ppBallX=50;ppBallY=50;ppVX=(Math.random()-0.5)*0.3;ppVY=Math.random()>0.5?0.2:-0.2;ppSpeedMult=1;
+      if(ppHearts<=0){ppRunning=false;canvas.removeEventListener('touchmove',ppTouchMove);canvas.removeEventListener('mousemove',ppMouseMove);showEnd('🏓','Spiel vorbei!','Der Computer hat gewonnen... Nächstes Mal! 😄',0);return;}
+    }
+    var ball=document.getElementById('ppBall');
+    var pp=document.getElementById('ppPlayerPaddle');
+    var cp=document.getElementById('ppCompPaddle');
+    if(ball){ball.style.left=ppBallX+'%';ball.style.top=ppBallY+'%';}
+    if(pp)pp.style.left=ppPlayerX+'%';
+    if(cp)cp.style.left=ppCompX+'%';
+    ppAnimId=requestAnimationFrame(ppLoop);
+  }
+</script>
+</body>
+</html>
