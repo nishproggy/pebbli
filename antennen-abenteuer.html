@@ -136,7 +136,8 @@
       color: white;
       font-family: 'JetBrains Mono', monospace;
       font-size: 13px;
-      z-index: 10;
+      position: relative;
+      z-index: 300;
     }
 
     .level-badge {
@@ -151,6 +152,7 @@
       align-items: center;
       gap: 6px;
       position: relative;
+      z-index: 300;
     }
 
     .level-dropdown {
@@ -161,7 +163,7 @@
       border: 1px solid rgba(255,255,255,0.15);
       border-radius: 10px;
       overflow: hidden;
-      z-index: 100;
+      z-index: 200;
       min-width: 180px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.4);
       display: none;
@@ -345,17 +347,6 @@
       <h1>Eine besondere Erinnerung</h1>
       <p>Hilf Pebbli die Satelliten-Antenne in Betrieb zu nehmen.<br>Triff die richtigen Entscheidungen!</p>
       <button class="btn" onclick="showBuffer()">Abenteuer starten 🚗</button>
-      <button onclick="startLevel4Buffer()" style="background:none;border:none;font-size:10px;color:#ccc;cursor:pointer;margin-top:-8px;">dev: skip to L4</button>
-      <button onclick="startLevel5Buffer()" style="background:none;border:none;font-size:10px;color:#ccc;cursor:pointer;margin-top:-4px;">dev: skip to L5</button>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px;">
-        <button onclick="startLevel1()" style="background:none;border:none;font-size:10px;color:#ccc;cursor:pointer;">L1</button>
-        <button onclick="startLevel2Buffer()" style="background:none;border:none;font-size:10px;color:#ccc;cursor:pointer;">L2</button>
-        <button onclick="startLevel3Buffer()" style="background:none;border:none;font-size:10px;color:#ccc;cursor:pointer;">L3</button>
-        <button onclick="startLevel4Buffer()" style="background:none;border:none;font-size:10px;color:#ccc;cursor:pointer;">L4</button>
-        <button onclick="startLevel5Buffer()" style="background:none;border:none;font-size:10px;color:#ccc;cursor:pointer;">L5</button>
-        <button onclick="startLevel6Buffer()" style="background:none;border:none;font-size:10px;color:#ccc;cursor:pointer;">L6</button>
-        <button onclick="ninaHoldsHand()" style="background:none;border:none;font-size:10px;color:#ccc;cursor:pointer;">L7</button>
-      </div>
     </div>
   </div>
 
@@ -474,6 +465,24 @@
       <span style="font-size:12px;color:rgba(255,255,255,0.6);font-family:'JetBrains Mono',monospace;">Zusammen nach unten!</span>
     </div>
     <div id="level6Scene" style="flex:1;position:relative;"></div>
+  </div>
+
+  <!-- SECRET: BIER -->
+  <div class="screen" id="bierScreen" style="background:linear-gradient(180deg,#1a140a,#0a0a05);">
+    <div class="game-header" style="background:rgba(0,0,0,0.4);">
+      <span class="label" style="color:#b8960a;font-size:12px;">🍺 Geheimes Level</span>
+      <span style="font-size:11px;color:rgba(255,255,255,0.5);font-family:'JetBrains Mono',monospace;">Prost!</span>
+    </div>
+    <div id="bierScene" style="flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;"></div>
+  </div>
+
+  <!-- SECRET: LABYRINTH -->
+  <div class="screen" id="labyrinthScreen" style="background:#0a0f0a;">
+    <div class="game-header" style="background:rgba(0,0,0,0.5);">
+      <span class="label" style="color:#58d68d;font-size:12px;">🤫 Wegschleichen</span>
+      <span style="font-size:11px;color:rgba(255,255,255,0.5);font-family:'JetBrains Mono',monospace;">Nicht erwischen lassen!</span>
+    </div>
+    <div id="labyrinthScene" style="flex:1;position:relative;overflow:hidden;"></div>
   </div>
 
   <script>
@@ -1986,6 +1995,37 @@
       },1500);
     }
 
+    function rainKissEmojis(scene, kissCount){
+      var emojis=['💋','💛','💙','💗','💝','💋','💋','💛'];
+      var showBeer = Math.random() < 0.2;
+      var beerIdx = Math.floor(Math.random()*12)+4;
+      var beerPlaced = false;
+      for(var i=0;i<20;i++){
+        (function(i){
+          setTimeout(function(){
+            var el=document.createElement('div');
+            var isBeer = showBeer && !beerPlaced && i===beerIdx;
+            if(isBeer) beerPlaced=true;
+            el.textContent = isBeer ? '🍺' : emojis[Math.floor(Math.random()*emojis.length)];
+            el.style.cssText='position:fixed;top:-40px;left:'+(Math.random()*100)+'%;transform:translateX(-50%);font-size:'+(isBeer?34:(18+Math.random()*20))+'px;pointer-events:'+(isBeer?'auto':'none')+';z-index:400;cursor:'+(isBeer?'pointer':'default')+';';
+            document.body.appendChild(el);
+            if(isBeer){
+              el.onclick=function(e){e.stopPropagation();el.remove();startBierLevel();};
+              el.ontouchend=function(e){e.preventDefault();e.stopPropagation();el.remove();startBierLevel();};
+            }
+            var dur=1500+Math.random()*1500;
+            el.style.transition='transform '+dur+'ms ease, opacity '+dur+'ms ease';
+            setTimeout(function(){
+              el.style.transform='translateX(-50%) translateY('+(window.innerHeight+60)+'px) rotate('+(Math.random()*60-30)+'deg)';
+              el.style.opacity='0';
+              setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},dur);
+            },50);
+          },i*80);
+        })(i);
+      }
+    }
+
+
     function ninaHoldsHand(){
       // Make sure level6Screen is visible
       document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('visible');});
@@ -2046,16 +2086,17 @@
       kissBtn.onmouseover=function(){kissBtn.style.transform='scale(1.15)';};
       kissBtn.onmouseout=function(){kissBtn.style.transform='scale(1)';};
       var kissing=false;
+      var kissCount=0;
       kissBtn.onclick=function(){
         if(kissing)return;
         kissing=true;
-        // Move together
+        kissCount++;
         ninaE.style.transform='translateX(22px)';
         pebbliE.style.transform='translateX(-22px)';
         setTimeout(function(){
           kissE.style.opacity='1';
+          rainKissEmojis(scene, kissCount);
           setTimeout(function(){
-            // Move apart
             kissE.style.opacity='0';
             ninaE.style.transform='translateX(0)';
             pebbliE.style.transform='translateX(0)';
@@ -2411,6 +2452,573 @@
       document.body.appendChild(o);
       setTimeout(function(){o.remove();markLevelComplete('l5');startLevel6Buffer();},3500);
     }
+    // ===== GEHEIMES BIER LEVEL =====
+    var bierToasts=0,bierInterval=null,labyrinthWon=false;
+    var uweTexts=[
+      '👨‍💼 Das war wirklich ein toller Tag heute!',
+      '👨‍💼 Also die Antenne hat super funktioniert!',
+      '👨‍💼 Wir sollten das wiederholen!',
+      '👨‍💼 Ein Bier geht noch, oder?',
+      '👨‍💼 Es gab heute schon wieder so viel zu tun! 🙄',
+      '👨‍💼 Ich könnte noch stundenlang hier sitzen!',
+    ];
+    var uweIdx=0;
+
+    function startBierLevel(){
+      bierToasts=0; uweIdx=0;
+      document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('visible');});
+      // Intro screen
+      var o=document.createElement('div');
+      o.style.cssText='position:fixed;inset:0;background:linear-gradient(180deg,#1a140a,#0a0a05);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;color:white;font-family:Lora,serif;text-align:center;padding:48px;';
+      o.innerHTML='<span style="font-size:52px;">🍺</span>'
+        +'<p style="font-size:18px;font-weight:600;color:#b8960a;">Du hast das geheime Level gefunden!</p>'
+        +'<p style="font-size:14px;font-style:italic;color:rgba(255,255,255,0.8);line-height:1.9;">Nach dem Abenteuer auf dem Dach –<br>Nina, Pebbli und Uwe gehen noch Bier trinken.</p>'
+        +'<p style="font-size:13px;color:rgba(255,255,255,0.6);font-style:italic;">Uwe bestellt. Natürlich.</p>'
+        +'<div style="background:rgba(255,255,255,0.05);border-radius:16px;padding:14px 24px;font-size:13px;color:rgba(255,255,255,0.8);line-height:1.8;">Stoßt an – aber nicht zu früh<br>und nicht zu spät!</div>'
+        +'<button style="margin-top:8px;padding:14px 32px;border-radius:50px;border:none;background:#b8960a;color:white;font-family:Lora,serif;font-size:15px;cursor:pointer;" id="bierStartBtn">Prost! 🍺</button>';
+      document.body.appendChild(o);
+      document.getElementById('bierStartBtn').onclick = function(){
+        o.remove();
+        document.getElementById('bierScreen').classList.add('visible');
+        buildBierLevel();
+      };
+    }
+
+    function buildBierLevel(){
+      var scene=document.getElementById('bierScene');
+      scene.innerHTML='';
+
+      // Title
+      var title=document.createElement('div');
+      title.style.cssText='font-family:Lora,serif;font-size:15px;color:rgba(255,255,255,0.7);font-style:italic;text-align:center;';
+      title.textContent='Uwe hat noch eine Runde bestellt...';
+      scene.appendChild(title);
+
+      // Table with characters
+      var table=document.createElement('div');
+      table.style.cssText='display:flex;align-items:flex-end;justify-content:center;gap:24px;font-size:40px;';
+      table.innerHTML='<span>👱‍♀️</span><span>🦦</span><span>👨‍💼</span>';
+      scene.appendChild(table);
+
+      // Glasses
+      var glasses=document.createElement('div');
+      glasses.style.cssText='display:flex;gap:24px;font-size:36px;';
+      glasses.innerHTML='<span id="glass1">🍺</span><span id="glass2">🍺</span><span id="glass3">🍺</span>';
+      scene.appendChild(glasses);
+
+      // Timing bar
+      var barWrap=document.createElement('div');
+      barWrap.style.cssText='width:280px;height:16px;background:rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;position:relative;margin-top:8px;';
+      var bar=document.createElement('div');
+      bar.id='bierBar';
+      bar.style.cssText='position:absolute;top:0;left:0;height:100%;width:0%;background:#e05c7a;border-radius:8px;';
+      var greenZone=document.createElement('div');
+      greenZone.style.cssText='position:absolute;top:0;left:35%;width:30%;height:100%;background:rgba(88,214,141,0.4);border-radius:4px;';
+      barWrap.appendChild(greenZone);
+      barWrap.appendChild(bar);
+      scene.appendChild(barWrap);
+
+      // Prost button
+      var prostBtn=document.createElement('button');
+      prostBtn.textContent='🍺 Prost!';
+      prostBtn.style.cssText='padding:14px 32px;border-radius:50px;border:none;font-family:Lora,serif;font-size:16px;font-weight:600;cursor:pointer;background:#b8960a;color:white;box-shadow:0 4px 12px rgba(0,0,0,0.3);margin-top:8px;';
+      scene.appendChild(prostBtn);
+
+      // Instruction
+      var inst=document.createElement('div');
+      inst.style.cssText='font-family:JetBrains Mono,monospace;font-size:10px;color:rgba(255,255,255,0.4);text-align:center;';
+      inst.textContent='Tippe wenn der Balken im grünen Bereich ist!';
+      scene.appendChild(inst);
+
+      // Result
+      var result=document.createElement('div');
+      result.id='bierResult';
+      result.style.cssText='font-family:Lora,serif;font-size:14px;color:white;min-height:20px;text-align:center;font-style:italic;';
+      scene.appendChild(result);
+
+      // Uwe bubble
+      var uweBubble=document.createElement('div');
+      uweBubble.id='uweBubble';
+      uweBubble.style.cssText='background:white;border-radius:14px;padding:10px 16px;font-size:12px;color:#2d2320;max-width:280px;width:90%;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.2);line-height:1.5;opacity:0;transition:opacity 0.4s ease;margin-top:4px;';
+      uweBubble.textContent=uweTexts[0];
+      scene.appendChild(uweBubble);
+
+      // Animate bar
+      var barPos=0,barDir=1,barSpeed=0.8;
+      bierInterval=setInterval(function(){
+        barPos+=barDir*barSpeed;
+        if(barPos>=100){barPos=100;barDir=-1;}
+        if(barPos<=0){barPos=0;barDir=1;}
+        bar.style.width=barPos+'%';
+        // Color based on zone
+        if(barPos>=35&&barPos<=65){
+          bar.style.background='#58d68d';
+        }else{
+          bar.style.background='#e05c7a';
+        }
+      },16);
+
+      // Show Uwe talking
+      setTimeout(function(){showUwe();},2000);
+
+      function showUwe(){
+        uweBubble.style.opacity='0';
+        setTimeout(function(){
+          uweBubble.textContent=uweTexts[uweIdx++%uweTexts.length];
+          uweBubble.style.opacity='1';
+        },400);
+      }
+      var uweInt=setInterval(showUwe,5000);
+
+      function onProst(){
+        var inGreen=barPos>=35&&barPos<=65;
+        var r=document.getElementById('bierResult');
+        if(inGreen){
+          bierToasts++;
+          barSpeed+=0.2;
+          // Animated Prost emoji!
+          var prost=document.createElement('div');
+          prost.textContent='🍻';
+          prost.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);font-size:80px;z-index:400;pointer-events:none;transition:transform 0.4s ease,opacity 0.6s ease 0.4s;';
+          document.body.appendChild(prost);
+          setTimeout(function(){prost.style.transform='translate(-50%,-50%) scale(1)';},50);
+          setTimeout(function(){prost.style.opacity='0';},500);
+          setTimeout(function(){if(prost.parentNode)prost.parentNode.removeChild(prost);},1100);
+          if(r) r.textContent='Prost! 🍺 ('+bierToasts+'/3)';
+          if(bierToasts>=3){
+            clearInterval(bierInterval);
+            clearInterval(uweInt);
+            setTimeout(function(){
+              startLabyrinth();
+            },1000);
+          }
+        }else{
+          if(r) r.textContent='Zu früh/spät! Uwe trinkt alleine... 😅';
+          setTimeout(function(){if(r)r.textContent='';},1500);
+        }
+      }
+
+      prostBtn.onclick=onProst;
+      prostBtn.ontouchend=function(e){e.preventDefault();onProst();};
+    }
+
+    // ===== LABYRINTH =====
+    var CELL=32,MAZE_W=9,MAZE_H=12;
+    var playerPos={x:1,y:1},uweWatching=false,uweWatchInterval=null;
+
+    function startLabyrinth(){
+      labyrinthWon=false;
+      document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('visible');});
+      // Show intro first
+      var o=document.createElement('div');
+      o.style.cssText='position:fixed;inset:0;background:linear-gradient(180deg,#0a0f0a,#050a05);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;color:white;font-family:Lora,serif;text-align:center;padding:48px;';
+      o.innerHTML='<span style="font-size:52px;">🤫</span>'
+        +'<p style="font-size:18px;font-style:italic;line-height:1.8;">Ihr wollt ins Bett gehen –<br>aber Uwe redet noch.</p>'
+        +'<p style="font-size:14px;color:rgba(255,255,255,0.7);line-height:2;">Schleicht euch raus, ohne dass er es merkt.</p>'
+        +'<div style="background:rgba(255,255,255,0.05);border-radius:16px;padding:16px 24px;font-size:13px;color:rgba(255,255,255,0.8);line-height:2.2;">'
+        +'👨‍💼 Wenn Uwe stehenbleibt: weiterlaufen!<br>'
+        +'👀 Wenn er sich umdreht: stehenbleiben!'
+        +'</div>'
+        +'<button style="margin-top:8px;padding:14px 32px;border-radius:50px;border:none;background:#2a5a2a;color:white;font-family:Lora,serif;font-size:15px;cursor:pointer;" id="labStartBtn">Los geht\'s 🤫</button>';
+      document.body.appendChild(o);
+      document.getElementById('labStartBtn').onclick = function(){
+        o.remove();
+        document.getElementById('labyrinthScreen').classList.add('visible');
+        buildLabyrinth();
+      };
+    }
+
+    function buildLabyrinth(){
+      var scene=document.getElementById('labyrinthScene');
+      scene.innerHTML='';
+      var cw=scene.offsetWidth,ch=scene.offsetHeight;
+
+      // Generate maze using recursive backtracking
+      var maze=generateMaze(MAZE_W,MAZE_H);
+
+      // Draw maze
+      var mazeEl=document.createElement('div');
+      var totalW=MAZE_W*CELL,totalH=MAZE_H*CELL;
+      mazeEl.style.cssText='position:absolute;left:'+(cw/2-totalW/2)+'px;top:'+(ch/2-totalH/2)+'px;width:'+totalW+'px;height:'+totalH+'px;';
+      mazeEl.id='mazeEl';
+
+      for(var r=0;r<MAZE_H;r++){
+        for(var c=0;c<MAZE_W;c++){
+          var cell=document.createElement('div');
+          var isWall=maze[r][c]===1;
+          var isExit=r===MAZE_H-2&&c===MAZE_W-2;
+          cell.style.cssText='position:absolute;left:'+(c*CELL)+'px;top:'+(r*CELL)+'px;width:'+CELL+'px;height:'+CELL+'px;background:'+(isExit?'rgba(88,214,141,0.4)':isWall?'#1a3a1a':'rgba(255,255,255,0.08)')+';border:'+(isWall?'none':'1px solid rgba(255,255,255,0.05)')+';box-shadow:'+(isWall?'inset 0 0 0 1px #0a2a0a':'')+';display:flex;align-items:center;justify-content:center;font-size:16px;';
+          if(isExit) cell.textContent='🚪';
+          mazeEl.appendChild(cell);
+        }
+      }
+
+      // Player (Nina + Pebbli)
+      var player=document.createElement('div');
+      player.id='labPlayer';
+      player.style.cssText='position:absolute;font-size:14px;z-index:10;transition:left 0.1s,top 0.1s;';
+      player.textContent='👱‍♀️🦦';
+      playerPos={x:1,y:1};
+      player.style.left=(1*CELL)+'px';
+      player.style.top=(1*CELL)+'px';
+      mazeEl.appendChild(player);
+
+      // Uwe at entrance
+      var uwe=document.createElement('div');
+      uwe.id='labUwe';
+      uwe.style.cssText='position:absolute;font-size:20px;z-index:10;left:0px;top:0px;';
+      uwe.textContent='👨‍💼';
+      mazeEl.appendChild(uwe);
+
+      // Uwe bubble
+      var uweBub=document.createElement('div');
+      uweBub.id='labUweBubble';
+      uweBub.style.cssText='position:absolute;top:8px;left:50%;transform:translateX(-50%);background:white;border-radius:14px;padding:8px 14px;font-size:11px;color:#2d2320;max-width:260px;width:90%;text-align:center;z-index:20;opacity:0;transition:opacity 0.4s;';
+      scene.appendChild(uweBub);
+
+      // Flash overlay
+      var flash=document.createElement('div');
+      flash.id='labFlash';
+      flash.style.cssText='position:fixed;inset:0;background:rgba(255,0,0,0.3);z-index:100;opacity:0;pointer-events:none;transition:opacity 0.3s;';
+      document.body.appendChild(flash);
+
+      scene.appendChild(mazeEl);
+
+      // Hint
+      var hint=document.createElement('div');
+      hint.style.cssText='position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-family:JetBrains Mono,monospace;font-size:10px;color:rgba(255,255,255,0.4);white-space:nowrap;';
+      hint.textContent='Tippe auf die Richtung um zu schleichen!';
+      scene.appendChild(hint);
+
+      // Direction buttons
+      var btnWrap=document.createElement('div');
+      btnWrap.style.cssText='position:absolute;bottom:30px;left:50%;transform:translateX(-50%);display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(2,44px);gap:4px;';
+      var dirs=[
+        {label:'↑',r:-1,c:0,col:1,row:0},{label:'←',r:0,c:-1,col:0,row:1},
+        {label:'↓',r:1,c:0,col:1,row:1},{label:'→',r:0,c:1,col:2,row:1}
+      ];
+      dirs.forEach(function(d){
+        var btn=document.createElement('button');
+        btn.textContent=d.label;
+        btn.style.cssText='grid-column:'+(d.col+1)+';grid-row:'+(d.row+1)+';padding:0;border-radius:8px;border:none;background:rgba(88,214,141,0.2);color:#58d68d;font-size:20px;cursor:pointer;';
+        btn.onclick=function(){movePlayer(d.r,d.c,maze,mazeEl);}
+        btn.ontouchend=function(e){e.preventDefault();movePlayer(d.r,d.c,maze,mazeEl);};
+        btnWrap.appendChild(btn);
+      });
+      scene.appendChild(btnWrap);
+
+      var playerMoved=false;
+
+      // Uwe looks around periodically
+      uweWatchInterval=setInterval(function(){
+        uweWatching=true;
+        playerMoved=false; // reset movement tracker
+        uwe.textContent='👀';
+        var b=document.getElementById('labUweBubble');
+        if(b){b.textContent=uweTexts[Math.floor(Math.random()*uweTexts.length)];b.style.opacity='1';}
+        setTimeout(function(){
+          uweWatching=false;
+          uwe.textContent='👨‍💼';
+          if(b)b.style.opacity='0';
+        },2000);
+      },5000);
+    }
+
+    function generateMaze(w,h){
+      var maze=[];
+      for(var r=0;r<h;r++){maze[r]=[];for(var c=0;c<w;c++)maze[r][c]=1;}
+      function carve(r,c){
+        var dirs=[[0,2],[2,0],[0,-2],[-2,0]].sort(function(){return Math.random()-0.5;});
+        dirs.forEach(function(d){
+          var nr=r+d[0],nc=c+d[1];
+          if(nr>0&&nr<h-1&&nc>0&&nc<w-1&&maze[nr][nc]===1){
+            maze[r+d[0]/2][c+d[1]/2]=0;
+            maze[nr][nc]=0;
+            carve(nr,nc);
+          }
+        });
+      }
+      maze[1][1]=0;
+      carve(1,1);
+      maze[h-2][w-2]=0; // exit
+      return maze;
+    }
+
+    function movePlayer(dr,dc,maze,mazeEl){
+      if(labyrinthWon)return;
+      var nx=playerPos.x+dc,ny=playerPos.y+dr;
+      if(ny<0||ny>=MAZE_H||nx<0||nx>=MAZE_W)return;
+      if(maze[ny][nx]===1)return;
+      // Caught if moving while Uwe watches!
+      if(uweWatching){caughtByUwe();return;}
+      playerPos.x=nx;playerPos.y=ny;
+      var player=document.getElementById('labPlayer');
+      if(player){player.style.left=(nx*CELL)+'px';player.style.top=(ny*CELL)+'px';}
+      // Check exit
+      if(ny===MAZE_H-2&&nx===MAZE_W-2){winLabyrinth();}
+    }
+
+    function caughtByUwe(){
+      if(labyrinthWon)return;
+      clearInterval(uweWatchInterval);
+      var flash=document.getElementById('labFlash');
+      if(flash){flash.style.opacity='1';setTimeout(function(){flash.style.opacity='0';},600);}
+      setTimeout(function(){
+        if(flash&&flash.parentNode)flash.parentNode.removeChild(flash);
+        document.getElementById('labyrinthScreen').classList.remove('visible');
+        var o=document.createElement('div');
+        o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;color:white;font-family:Lora,serif;text-align:center;padding:40px;';
+        o.innerHTML='<span style="font-size:64px;">👨‍💼</span><span style="font-size:18px;font-style:italic;line-height:1.8;">„Ich habe noch ein Bier bestellt.<br>Wir trinken weiter."</span><span style="font-size:13px;color:rgba(255,255,255,0.5);font-family:JetBrains Mono,monospace;">Zurück an den Tisch...</span>';
+        document.body.appendChild(o);
+        setTimeout(function(){
+          o.remove();
+          bierToasts=0;
+          document.getElementById('bierScreen').classList.add('visible');
+          buildBierLevel();
+        },3000);
+      },700);
+    }
+
+    function winLabyrinth(){
+      labyrinthWon=true;
+      clearInterval(uweWatchInterval);
+      document.body.style.background='#000';
+      var flash=document.getElementById('labFlash');
+      if(flash&&flash.parentNode)flash.parentNode.removeChild(flash);
+      setTimeout(function(){
+        document.getElementById('labyrinthScreen').classList.remove('visible');
+        var o=document.createElement('div');
+        o.style.cssText='position:fixed;inset:0;background:linear-gradient(180deg,#1a1a2a,#0a0a1a);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;color:white;font-family:Lora,serif;text-align:center;padding:40px;';
+        o.innerHTML='<span style="font-size:52px;">🤫</span><span style="font-size:22px;">Geschafft!</span><span style="font-size:14px;color:rgba(255,255,255,0.7);font-style:italic;line-height:1.8;">Nina und Pebbli schleichen sich davon.<br>Gute Nacht, Uwe. 🤫</span><span style="font-size:40px;">👱‍♀️🦦</span>';
+        document.body.appendChild(o);
+        // Fade text out after 2s
+        setTimeout(function(){
+          o.style.transition='opacity 1.5s ease';
+          o.style.opacity='0';
+          setTimeout(function(){
+            o.remove();
+            // Black screen
+            var black=document.createElement('div');
+            black.style.cssText='position:fixed;inset:0;background:#000;z-index:300;display:flex;align-items:center;justify-content:center;';
+            document.body.appendChild(black);
+            // Also set body background to black
+            document.body.style.background='#000';
+            // Canvas animation: emojis fly in, grow, explode
+            setTimeout(function(){
+              black.innerHTML='';
+              var sc=document.createElement('canvas');
+              sc.width=window.innerWidth;
+              sc.height=window.innerHeight;
+              sc.style.cssText='position:absolute;inset:0;';
+              black.appendChild(sc);
+              var ctx2=sc.getContext('2d');
+              var cx=sc.width/2,cy=sc.height/2;
+              var peachX=0,aubergX=sc.width;
+              var size=40,growing=false,growSize=40;
+              var frame2=0;
+              function spicyLoop(){
+                ctx2.clearRect(0,0,sc.width,sc.height);
+                ctx2.font=size+'px serif';
+                ctx2.textAlign='center';
+                ctx2.textBaseline='middle';
+                if(!growing){
+                  // Fly toward center
+                  peachX+=(cx-60-peachX)*0.08;
+                  aubergX+=(cx+60-aubergX)*0.08;
+                  ctx2.font=size+'px serif';
+                  ctx2.fillText('🍑',peachX,cy);
+                  ctx2.fillText('🍆',aubergX,cy);
+                  if(Math.abs(peachX-(cx-60))<5) growing=true;
+                }else{
+                  // Grow
+                  growSize+=4;
+                  ctx2.font=growSize+'px serif';
+                  ctx2.fillText('🍑',cx-growSize/2,cy);
+                  ctx2.fillText('🍆',cx+growSize/2,cy);
+                  if(growSize>200){
+                    // Flash white
+                    ctx2.fillStyle='white';
+                    ctx2.fillRect(0,0,sc.width,sc.height);
+                    black.remove();
+                    launchFireworks();
+                    return;
+                  }
+                }
+                frame2++;
+                requestAnimationFrame(spicyLoop);
+              }
+              spicyLoop();
+            },300);
+          },1500);
+        },2000);
+      },500);
+    }
+
+
+    function launchFireworks(){
+      var fw=document.createElement('div');
+      fw.style.cssText='position:fixed;inset:0;background:#000;z-index:300;';
+      document.body.appendChild(fw);
+
+      var canvas=document.createElement('canvas');
+      canvas.width=window.innerWidth;
+      canvas.height=window.innerHeight;
+      canvas.style.cssText='position:absolute;inset:0;';
+      fw.appendChild(canvas);
+      var ctx=canvas.getContext('2d');
+
+      var particles=[];
+      var rockets=[];
+      var colors=['#ff6b9d','#ffd93d','#6bcaff','#ff9f43','#a29bfe','#fd79a8','#00cec9','#fdcb6e'];
+
+      function Rocket(){
+        this.x=Math.random()*canvas.width;
+        this.y=canvas.height;
+        this.tx=canvas.width*0.1+Math.random()*canvas.width*0.8;
+        this.ty=canvas.height*0.1+Math.random()*canvas.height*0.4;
+        this.speed=8+Math.random()*6;
+        this.color=colors[Math.floor(Math.random()*colors.length)];
+        this.done=false;
+        var dx=this.tx-this.x,dy=this.ty-this.y;
+        var dist=Math.sqrt(dx*dx+dy*dy);
+        this.vx=dx/dist*this.speed;
+        this.vy=dy/dist*this.speed;
+      }
+      Rocket.prototype.update=function(){
+        this.x+=this.vx;this.y+=this.vy;
+        if(Math.abs(this.x-this.tx)<10&&Math.abs(this.y-this.ty)<10){
+          this.done=true;
+          explode(this.x,this.y,this.color);
+        }
+      };
+      Rocket.prototype.draw=function(){
+        ctx.beginPath();ctx.arc(this.x,this.y,3,0,Math.PI*2);
+        ctx.fillStyle=this.color;ctx.fill();
+        ctx.beginPath();ctx.moveTo(this.x,this.y);
+        ctx.lineTo(this.x-this.vx*3,this.y-this.vy*3);
+        ctx.strokeStyle=this.color;ctx.lineWidth=2;ctx.stroke();
+      };
+
+      function explode(x,y,color){
+        var count=80+Math.floor(Math.random()*40);
+        for(var i=0;i<count;i++){
+          var angle=Math.random()*Math.PI*2;
+          var speed=2+Math.random()*6;
+          particles.push({
+            x:x,y:y,
+            vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
+            alpha:1,color:color,
+            size:2+Math.random()*2,
+            gravity:0.08,decay:0.015+Math.random()*0.01
+          });
+        }
+      }
+
+      var frame=0;
+      var running=true;
+      function loop(){
+        if(!running)return;
+        ctx.fillStyle='rgba(0,0,0,0.15)';
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+
+        // Launch rockets
+        if(frame%30===0&&frame<300){
+          rockets.push(new Rocket());
+        }
+
+        // Update rockets
+        rockets=rockets.filter(function(r){
+          r.update();r.draw();return !r.done;
+        });
+
+        // Update particles
+        particles=particles.filter(function(p){
+          p.x+=p.vx;p.y+=p.vy;
+          p.vy+=p.gravity;
+          p.vx*=0.98;p.vy*=0.98;
+          p.alpha-=p.decay;
+          if(p.alpha<=0)return false;
+          ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+          ctx.fillStyle=p.color;ctx.globalAlpha=p.alpha;ctx.fill();
+          ctx.globalAlpha=1;
+          return true;
+        });
+
+        frame++;
+        if(frame<400||particles.length>0){
+          requestAnimationFrame(loop);
+        }else{
+          running=false;
+          // Heart particle burst at the end!
+          launchHeartBurst(canvas, ctx, fw);
+        }
+      }
+      loop();
+    }
+
+    function launchHeartBurst(canvas, ctx, fw){
+      // Generate heart shape points
+      var cx=canvas.width/2, cy=canvas.height/2;
+      var heartPoints=[];
+      for(var t=0;t<Math.PI*2;t+=0.1){
+        var x=16*Math.pow(Math.sin(t),3);
+        var y=-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));
+        heartPoints.push({x:cx+x*14, y:cy+y*14});
+      }
+      // Launch particles toward heart shape
+      var hParticles=heartPoints.map(function(p){
+        var angle=Math.random()*Math.PI*2;
+        var dist=200+Math.random()*100;
+        return {
+          x:cx+Math.cos(angle)*dist,
+          y:cy+Math.sin(angle)*dist,
+          tx:p.x, ty:p.y,
+          color:'hsl('+(340+Math.random()*30)+',100%,'+(60+Math.random()*20)+'%)',
+          alpha:1
+        };
+      });
+      var hFrame=0;
+      function heartLoop(){
+        ctx.fillStyle='rgba(0,0,0,0.12)';
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        var done=true;
+        hParticles.forEach(function(p){
+          p.x+=(p.tx-p.x)*0.08;
+          p.y+=(p.ty-p.y)*0.08;
+          if(Math.abs(p.x-p.tx)>2||Math.abs(p.y-p.ty)>2) done=false;
+          ctx.globalAlpha=p.alpha;
+          ctx.beginPath();
+          ctx.arc(p.x,p.y,3,0,Math.PI*2);
+          ctx.fillStyle=p.color;
+          ctx.fill();
+          ctx.globalAlpha=1;
+        });
+        hFrame++;
+        if(hFrame<120&&!done) requestAnimationFrame(heartLoop);
+        else{
+          // Pulse the heart
+          var pulse=0;
+          function pulseLoop(){
+            ctx.fillStyle='rgba(0,0,0,0.05)';
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+            var scale=1+Math.sin(pulse*0.15)*0.08;
+            hParticles.forEach(function(p){
+              ctx.globalAlpha=0.9;
+              ctx.beginPath();
+              ctx.arc(cx+(p.tx-cx)*scale, cy+(p.ty-cy)*scale,3,0,Math.PI*2);
+              ctx.fillStyle=p.color;
+              ctx.fill();
+              ctx.globalAlpha=1;
+            });
+            pulse++;
+            if(pulse<60) requestAnimationFrame(pulseLoop);
+          }
+          pulseLoop();
+        }
+      }
+      setTimeout(heartLoop, 200);
+    }
+
   </script>
 
   <style>
